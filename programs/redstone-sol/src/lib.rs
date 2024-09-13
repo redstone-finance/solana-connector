@@ -1,4 +1,10 @@
+pub mod error;
+pub mod instructions;
+pub mod state;
+
 use anchor_lang::prelude::*;
+use instructions::*;
+use state::*;
 
 declare_id!("rstK87maWhB9ywBwNEzV96rTqLvoUU6oXG3LGoTgyc4");
 
@@ -6,11 +12,7 @@ declare_id!("rstK87maWhB9ywBwNEzV96rTqLvoUU6oXG3LGoTgyc4");
 pub mod redstone_sol {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
+    pub fn process_redstone_payload(ctx: Context<ProcessPayload>, payload: Vec<u8>) -> Result<()> {
+        process_redstone_payload::handler(ctx, payload)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
