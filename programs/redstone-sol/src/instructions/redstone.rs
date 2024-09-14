@@ -41,19 +41,25 @@ pub fn verify_redstone_marker(bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
-pub fn parse_payload(
-    bytes: &mut Vec<u8>,
-    data_packages_count: usize,
-) -> Result<Payload> {
-    let mut data_packages = Vec::with_capacity(data_packages_count);
-    for _ in 0..data_packages_count {
-        let data_package = parse_data_package(bytes)?;
-        data_packages.push(data_package);
-    }
-    Ok(Payload { data_packages })
+pub fn parse_raw_payload(bytes: &mut Vec<u8>) -> Result<Payload> {
+    // redstone marker is verifed in top-level method, just trimming here
+    trim_redstone_marker(bytes);
+    trim_payload(bytes)
 }
 
-fn parse_data_package(payload: &mut Vec<u8>) -> Result<DataPackage> {
+fn trim_data_packages(
+    payload: &mut Vec<u8>,
+    count: usize,
+) -> Result<Vec<DataPackage>> {
+    let mut data_packages = Vec::new();
+    for _ in 0..count {
+        let data_package = trim_data_package(payload)?;
+        data_packages.push(data_package);
+    }
+    Ok(data_packages)
+}
+
+fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage> {
     let signature = payload.trim_end(SIGNATURE_BS);
     let mut tmp = payload.clone();
 
@@ -76,6 +82,29 @@ fn parse_data_package(payload: &mut Vec<u8>) -> Result<DataPackage> {
         timestamp,
         signer_address,
     })
+}
+
+pub fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload> {
+    let data_packages_count = trim_metadata(payload);
+    let data_packages = trim_data_packages(payload, data_packages_count)?;
+
+    Ok(Payload { data_packages })
+}
+
+pub fn trim_metadata(payload: &mut Vec<u8>) -> usize {
+    let unsigned_metadata_size =
+        payload.trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS);
+    let unsigned_metadata_size =
+        usize::from_le_bytes(unsigned_metadata_size.try_into().unwrap());
+    let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
+
+    let package_count = payload.trim_end(DATA_PACKAGES_COUNT_BS);
+    usize::from_le_bytes(package_count.try_into().unwrap())
+}
+
+pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> [u8; 9] {
+    let redstone_marker = payload.trim_end(REDSTONE_MARKER_BS);
+    redstone_marker.try_into().unwrap()
 }
 
 pub fn trim_data_point_count(payload: &mut Vec<u8>) -> usize {
@@ -138,7 +167,6 @@ pub fn verify_data_packages(
 ) -> Result<()> {
     for package in &payload.data_packages {
         verify_timestamp(package.timestamp, config.block_timestamp)?;
-        // Add more verifications as needed
     }
     verify_signer_count(
         &payload.data_packages,

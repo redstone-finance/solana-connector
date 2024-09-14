@@ -2,7 +2,10 @@ use crate::instructions::redstone;
 use crate::state::*;
 use anchor_lang::prelude::*;
 
-pub fn process_redstone_payload(_ctx: Context<ProcessPayload>, payload: Vec<u8>) -> Result<()> {
+pub fn process_redstone_payload(
+    _ctx: Context<ProcessPayload>,
+    payload: Vec<u8>,
+) -> Result<()> {
     let config = Config {
         signer_count_threshold: 2,
         block_timestamp: Clock::get()?.unix_timestamp as u64,
@@ -15,16 +18,14 @@ pub fn process_redstone_payload(_ctx: Context<ProcessPayload>, payload: Vec<u8>)
             redstone::u256_from_slice("BTC".as_bytes()),
         ],
     };
-    let mut bytes = payload.to_vec();
-    redstone::verify_redstone_marker(&bytes)?;
+    redstone::verify_redstone_marker(&payload)?;
 
-    let _unsigned_metadata_size = redstone::extract_unsigned_metadata_size(&mut bytes)?;
-    let data_packages_count = redstone::extract_data_packages_count(&mut bytes)?;
-    let payload = redstone::parse_payload(&mut bytes, data_packages_count)?;
-    // TODO verify should happen at earlier stage
+    let mut payload = payload;
+    let payload = redstone::parse_raw_payload(&mut payload)?;
+
     redstone::verify_data_packages(&payload, &config)?;
 
-    // can do something with the payload here
-    //
+    msg!("Payload processed successfully");
+
     Ok(())
 }
