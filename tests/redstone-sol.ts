@@ -1,16 +1,36 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { RedstoneSol } from "../target/types/redstone_sol";
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe("redstone-sol", () => {
-  // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
   const program = anchor.workspace.RedstoneSol as Program<RedstoneSol>;
 
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
+  it("Processes Redstone payload successfully", async () => {
+    // Read the payload from the file
+    const payloadPath = path.join(__dirname, '..', 'sample-payload.hex');
+    const payloadHex = fs.readFileSync(payloadPath, 'utf8').trim();
+    const payload = Buffer.from(payloadHex, 'hex');
+
+    try {
+      // Process the payload
+      const tx = await program.methods.processRedstonePayload(payload)
+        .accounts({
+          user: anchor.AnchorProvider.env().wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .rpc();
+
+      console.log("Transaction signature:", tx);
+
+      // If we reach this point without throwing an error, the test passed
+      console.log("Payload processed successfully");
+    } catch (error) {
+      console.error("Error processing payload:", error);
+      throw error; // Re-throw the error to fail the test
+    }
   });
 });
