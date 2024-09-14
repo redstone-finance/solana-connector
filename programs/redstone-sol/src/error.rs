@@ -2,6 +2,12 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum RedstoneError {
+    #[msg("Size not supported")]
+    SizeNotSupported,
+
+    #[msg("Number overflow")]
+    NumberOverflow,
+
     #[msg("Invalid RedStone marker")]
     InvalidRedstoneMarker,
 

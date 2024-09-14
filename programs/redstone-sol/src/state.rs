@@ -8,7 +8,7 @@ pub struct DataPoint {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct DataPackage {
-    pub signer_address: [u8; 20],
+    pub signer_address: Vec<u8>,
     pub timestamp: u64,
     pub data_points: Vec<DataPoint>,
 }
@@ -22,6 +22,8 @@ pub struct Payload {
 pub struct Config {
     pub signer_count_threshold: u8,
     pub block_timestamp: u64,
+    pub signers: Vec<Vec<u8>>,
+    pub feed_ids: Vec<[u8; 32]>,
 }
 
 #[derive(Accounts)]
@@ -30,4 +32,3 @@ pub struct ProcessPayload<'info> {
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
-
