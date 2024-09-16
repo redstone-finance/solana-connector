@@ -1,9 +1,10 @@
+use crate::error::RedstoneError;
 use crate::instructions::redstone;
 use crate::state::*;
 use anchor_lang::prelude::*;
 
-pub fn process_redstone_payload(
-    _ctx: Context<ProcessPayload>,
+pub fn process_redstone_payload<'info>(
+    ctx: Context<'_, '_, '_, 'info, ProcessPayload<'info>>,
     payload: Vec<u8>,
 ) -> Result<()> {
     // block_timestamp as milis
@@ -44,6 +45,64 @@ pub fn process_redstone_payload(
                 "Data point: {} {}",
                 redstone::u256_to_string(data_point.feed_id),
                 data_point.value.to_string()
+            );
+        }
+    }
+
+    for package in &payload.data_packages {
+        for data_point in &package.data_points {
+            let (price_account_pubkey, bump) = Pubkey::find_program_address(
+                &[b"price", data_point.feed_id.as_ref()],
+                ctx.program_id,
+            );
+            let price_account_info = ctx
+                .remaining_accounts
+                .iter()
+                .find(|&account| account.key == &price_account_pubkey)
+                .ok_or(RedstoneError::MissingPriceAccount)?;
+
+            if price_account_info.data_is_empty() {
+                // Create the account if it doesn't exist
+                let space = 8 + 16 + 8 + 32; // discriminator + price + timestamp + feed_id
+                let rent = Rent::get()?;
+                let lamports = rent.minimum_balance(space);
+
+                let create_account_ix =
+                anchor_lang::solana_program::system_instruction::create_account(
+                    &ctx.accounts.user.key,
+                    price_account_info.key,
+                    lamports,
+                    space as u64,
+                    ctx.program_id,
+                );
+
+                anchor_lang::solana_program::program::invoke_signed(
+                    &create_account_ix,
+                    &[
+                        ctx.accounts.user.to_account_info(),
+                        price_account_info.clone(),
+                        ctx.accounts.system_program.to_account_info(),
+                    ],
+                    &[&[b"price", data_point.feed_id.as_ref(), &[bump]]],
+                )?;
+            }
+
+            // Now write the data
+            let mut price_account_data =
+                PriceData::try_from_slice(&price_account_info.data.borrow())?;
+            price_account_data.value = data_point.value;
+            price_account_data.timestamp = config.block_timestamp;
+            price_account_data.feed_id = data_point.feed_id;
+
+            price_account_data
+                .serialize(&mut *price_account_info.data.borrow_mut())?;
+
+            let feed_id_str = redstone::u256_to_string(data_point.feed_id);
+            msg!(
+                "Updated price for feed {}: {} at timestamp {}",
+                feed_id_str,
+                price_account_data.value,
+                price_account_data.timestamp
             );
         }
     }

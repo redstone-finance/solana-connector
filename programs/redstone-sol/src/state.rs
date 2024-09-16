@@ -1,5 +1,12 @@
 use anchor_lang::prelude::*;
 
+#[account]
+pub struct PriceData {
+    pub feed_id: [u8; 32],
+    pub value: u128,
+    pub timestamp: u64,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct DataPoint {
     pub feed_id: [u8; 32],

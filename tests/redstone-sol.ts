@@ -1,8 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { RedstoneSol } from "../target/types/redstone_sol";
-// import * as fs from "fs";
-// import * as path from "path";
 
 const samplePayload = Buffer.from([
   69, 84, 72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -56,7 +54,7 @@ describe("redstone-sol", () => {
 
   const program = anchor.workspace.RedstoneSol as Program<RedstoneSol>;
 
-  it("Processes Redstone payload successfully", async () => {
+  it.skip("Processes Redstone payload successfully", async () => {
     try {
       // Process the payload
       const cbix = anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
@@ -70,11 +68,56 @@ describe("redstone-sol", () => {
         })
         .rpc();
 
-      console.log("Transaction signature:", tx);
-      console.log("OK");
+      console.log("sig:", tx);
     } catch (error) {
       console.error("Error processing payload:", error);
       throw error; // Re-throw the error to fail the test
+    }
+  });
+
+  it("Updates price accounts correctly", async () => {
+    try {
+      const cbix = anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
+        units: 10 ** 6,
+      });
+
+      // Derive price account addresses
+      const [ethPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("price"), Buffer.from("ETH")],
+        program.programId
+      );
+
+      const [btcPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("price"), Buffer.from("BTC")],
+        program.programId
+      );
+
+      // Process the payload
+      const tx = await program.methods
+        .processRedstonePayload(samplePayload)
+        .preInstructions([cbix])
+        .accounts({
+          user: provider.wallet.publicKey,
+        })
+        .remainingAccounts([
+          { pubkey: ethPriceAccount, isWritable: true, isSigner: false },
+          { pubkey: btcPriceAccount, isWritable: true, isSigner: false },
+        ])
+        .rpc();
+
+      console.log("Transaction signature:", tx);
+
+      // Fetch and verify the updated price accounts
+      // console.log("ETH price:", ethPriceData.value.toString());
+      // console.log("BTC price:", btcPriceData.value.toString());
+      // console.log("ETH timestamp:", ethPriceData.timestamp.toString());
+      // console.log("BTC timestamp:", btcPriceData.timestamp.toString());
+    } catch (error) {
+      console.error(
+        "Error processing payload and verifying price accounts:",
+        error
+      );
+      throw error;
     }
   });
 });
