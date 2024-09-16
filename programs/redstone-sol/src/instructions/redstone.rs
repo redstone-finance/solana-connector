@@ -15,6 +15,14 @@ pub fn u256_from_slice(bytes: &[u8]) -> U256 {
     array
 }
 
+fn vec_to_usize(vec: &[u8]) -> usize {
+    vec.iter().fold(0usize, |acc, &b| (acc << 8) | b as usize)
+}
+
+fn vec_to_u64(vec: &[u8]) -> u64 {
+    vec.iter().fold(0u64, |acc, &b| (acc << 8) | b as u64)
+}
+
 pub trait Trim<T>
 where
     Self: Sized,
@@ -94,12 +102,11 @@ pub fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload> {
 pub fn trim_metadata(payload: &mut Vec<u8>) -> usize {
     let unsigned_metadata_size =
         payload.trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS);
-    let unsigned_metadata_size =
-        usize::from_le_bytes(unsigned_metadata_size.try_into().unwrap());
+    let unsigned_metadata_size = vec_to_usize(&unsigned_metadata_size);
     let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
 
     let package_count = payload.trim_end(DATA_PACKAGES_COUNT_BS);
-    usize::from_le_bytes(package_count.try_into().unwrap())
+    vec_to_usize(&package_count)
 }
 
 pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> [u8; 9] {
@@ -109,17 +116,17 @@ pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> [u8; 9] {
 
 pub fn trim_data_point_count(payload: &mut Vec<u8>) -> usize {
     let data_point_count = payload.trim_end(DATA_POINTS_COUNT_BS);
-    usize::from_le_bytes(data_point_count.try_into().unwrap())
+    vec_to_usize(&data_point_count)
 }
 
 pub fn trim_data_point_value_size(payload: &mut Vec<u8>) -> usize {
     let value_size = payload.trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS);
-    usize::from_le_bytes(value_size.try_into().unwrap())
+    vec_to_usize(&value_size)
 }
 
 pub fn trim_timestamp(payload: &mut Vec<u8>) -> u64 {
     let timestamp = payload.trim_end(TIMESTAMP_BS);
-    u64::from_le_bytes(timestamp.try_into().unwrap())
+    vec_to_u64(&timestamp)
 }
 
 pub fn parse_data_points(
@@ -143,7 +150,7 @@ fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     let feed_id = u256_from_slice(&feed_id);
 
     DataPoint {
-        value: u128::from_le_bytes(value.try_into().unwrap()),
+        value: u128::from_be_bytes(value.try_into().unwrap()),
         feed_id,
     }
 }
