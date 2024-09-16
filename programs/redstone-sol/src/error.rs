@@ -29,6 +29,6 @@ pub enum RedstoneError {
     #[msg("Invalid data package")]
     InvalidDataPackage,
 
-    #[msg("Missing price account")]
-    MissingPriceAccount,
+    #[msg("Invalid price account")]
+    InvalidPriceAccount,
 }

@@ -38,4 +38,10 @@ pub struct ProcessPayload<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
+    /// CHECK: PDA derived and checked in the program
+    #[account(mut)]
+    pub eth_price_account: AccountInfo<'info>,
+    /// CHECK: PDA derived and checked in the program
+    #[account(mut)]
+    pub btc_price_account: AccountInfo<'info>,
 }

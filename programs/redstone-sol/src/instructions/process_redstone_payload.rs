@@ -3,8 +3,8 @@ use crate::instructions::redstone;
 use crate::state::*;
 use anchor_lang::prelude::*;
 
-pub fn process_redstone_payload<'info>(
-    ctx: Context<'_, '_, '_, 'info, ProcessPayload<'info>>,
+pub fn process_redstone_payload(
+    ctx: Context<ProcessPayload>,
     payload: Vec<u8>,
 ) -> Result<()> {
     // block_timestamp as milis
@@ -55,11 +55,20 @@ pub fn process_redstone_payload<'info>(
                 &[b"price", data_point.feed_id.as_ref()],
                 ctx.program_id,
             );
-            let price_account_info = ctx
-                .remaining_accounts
-                .iter()
-                .find(|&account| account.key == &price_account_pubkey)
-                .ok_or(RedstoneError::MissingPriceAccount)?;
+
+            // TODO this shouldn't be like this, probably should only be the check
+            // against a single account as in case of Pyth program
+            let price_account_info = if price_account_pubkey
+                == *ctx.accounts.eth_price_account.key
+            {
+                &ctx.accounts.eth_price_account
+            } else if price_account_pubkey
+                == *ctx.accounts.btc_price_account.key
+            {
+                &ctx.accounts.btc_price_account
+            } else {
+                return Err(RedstoneError::InvalidPriceAccount.into());
+            };
 
             if price_account_info.data_is_empty() {
                 // Create the account if it doesn't exist
@@ -69,8 +78,8 @@ pub fn process_redstone_payload<'info>(
 
                 let create_account_ix =
                 anchor_lang::solana_program::system_instruction::create_account(
-                    &ctx.accounts.user.key,
-                    price_account_info.key,
+                    ctx.accounts.user.key,
+                    &price_account_pubkey,
                     lamports,
                     space as u64,
                     ctx.program_id,
@@ -83,7 +92,7 @@ pub fn process_redstone_payload<'info>(
                         price_account_info.clone(),
                         ctx.accounts.system_program.to_account_info(),
                     ],
-                    &[&[b"price", data_point.feed_id.as_ref(), &[bump]]],
+                    &[&[b"price", &data_point.feed_id[..], &[bump]]],
                 )?;
             }
 
