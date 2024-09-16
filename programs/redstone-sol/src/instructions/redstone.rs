@@ -8,6 +8,26 @@ use crate::state::*;
 
 pub type U256 = [u8; 32];
 
+// helper, debug, can be deleted later
+pub fn u256_to_string(u256: U256) -> String {
+    u256.iter()
+        .take_while(|&&c| c != 0)
+        .map(|&c| c as char)
+        .collect()
+}
+
+// helper, debug, can be deleted later
+pub fn bytes_to_hex(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    bytes.iter().fold(
+        String::with_capacity(bytes.len() * 2),
+        |mut output, b| {
+            let _ = write!(output, "{:02x}", b);
+            output
+        },
+    )
+}
+
 pub fn u256_from_slice(bytes: &[u8]) -> U256 {
     let mut array = [0u8; 32];
     let len = if bytes.len() > 32 { 32 } else { bytes.len() };
@@ -21,6 +41,10 @@ fn vec_to_usize(vec: &[u8]) -> usize {
 
 fn vec_to_u64(vec: &[u8]) -> u64 {
     vec.iter().fold(0u64, |acc, &b| (acc << 8) | b as u64)
+}
+
+fn vec_to_u128(vec: &[u8]) -> u128 {
+    vec.iter().fold(0u128, |acc, &b| (acc << 8) | b as u128)
 }
 
 pub trait Trim<T>
@@ -150,21 +174,26 @@ fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     let feed_id = u256_from_slice(&feed_id);
 
     DataPoint {
-        value: u128::from_be_bytes(value.try_into().unwrap()),
+        value: vec_to_u128(&value),
         feed_id,
     }
 }
 
 pub fn recover_address(message: &[u8], signature: &[u8]) -> Result<Vec<u8>> {
     let recovery_byte = signature[64];
+    let recovery_id =
+        recovery_byte - (if recovery_byte >= 27 { 27 } else { 0 });
     let msg_hash = keccak256(message);
-    let res = secp256k1_recover(&msg_hash, recovery_byte, &signature[..64]);
+    let res = secp256k1_recover(&msg_hash, recovery_id, &signature[..64]);
     match res {
         Ok(pubkey) => {
             let key_hash = keccak256(&pubkey.to_bytes()[1..]);
             Ok(key_hash[12..].to_vec())
         }
-        Err(_) => Err(RedstoneError::InvalidSignature.into()),
+        Err(e) => {
+            msg!("Invalid signature: {:?}: {:?}", signature, e);
+            Err(RedstoneError::InvalidSignature.into())
+        }
     }
 }
 
@@ -183,10 +212,23 @@ pub fn verify_data_packages(
 }
 
 pub fn verify_timestamp(timestamp: u64, block_timestamp: u64) -> Result<()> {
+    // TODO get rid of the debug msgs
     if timestamp + MAX_TIMESTAMP_DELAY_MS < block_timestamp {
+        msg!(
+            "Timestamp: {} + {} < {}",
+            timestamp,
+            MAX_TIMESTAMP_DELAY_MS,
+            block_timestamp
+        );
         return Err(RedstoneError::TimestampTooOld.into());
     }
     if timestamp > block_timestamp + MAX_TIMESTAMP_AHEAD_MS {
+        msg!(
+            "Timestamp: {} > {} + {}",
+            timestamp,
+            block_timestamp,
+            MAX_TIMESTAMP_AHEAD_MS
+        );
         return Err(RedstoneError::TimestampTooFuture.into());
     }
     Ok(())
