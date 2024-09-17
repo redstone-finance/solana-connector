@@ -33,26 +33,3 @@ pub struct Config {
     pub signers: Vec<Vec<u8>>,
     pub feed_ids: Vec<[u8; 32]>,
 }
-
-#[derive(Accounts)]
-pub struct ProcessPayload<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-    #[account(
-        init_if_needed,
-        payer = user,
-        space = 8 + std::mem::size_of::<PriceData>(),
-        seeds = [b"price", b"ETH\0\0"],
-        bump
-    )]
-    pub eth_price_account: Account<'info, PriceData>,
-    #[account(
-        init_if_needed,
-        payer = user,
-        space = 8 + std::mem::size_of::<PriceData>(),
-        seeds = [b"price", b"BTC\0\0"],
-        bump
-    )]
-    pub btc_price_account: Account<'info, PriceData>,
-    pub system_program: Program<'info, System>,
-}

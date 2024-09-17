@@ -1,7 +1,33 @@
 use crate::error::RedstoneError;
-use crate::instructions::redstone;
+use crate::redstone;
 use crate::state::*;
+use crate::util::*;
 use anchor_lang::prelude::*;
+
+#[derive(Accounts)]
+pub struct ProcessPayload<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(
+        init_if_needed,
+        payer = user,
+        space = 8 + std::mem::size_of::<PriceData>(),
+        seeds = [b"price", b"ETH\0\0"],
+        bump
+    )]
+    pub eth_price_account: Account<'info, PriceData>,
+    // TODO it is important to ensure there is no way to perform
+    // re-initialization attack here
+    #[account(
+        init_if_needed,
+        payer = user,
+        space = 8 + std::mem::size_of::<PriceData>(),
+        seeds = [b"price", b"BTC\0\0"],
+        bump
+    )]
+    pub btc_price_account: Account<'info, PriceData>,
+    pub system_program: Program<'info, System>,
+}
 
 pub fn process_redstone_payload(
     ctx: Context<ProcessPayload>,
@@ -20,8 +46,8 @@ pub fn process_redstone_payload(
             "83CBA8C619FB629B81A65C2E67FE15CF3E3C9747".into(),
         ],
         feed_ids: vec![
-            redstone::u256_from_slice("ETH".as_bytes()),
-            redstone::u256_from_slice("BTC".as_bytes()),
+            u256_from_slice("ETH".as_bytes()),
+            u256_from_slice("BTC".as_bytes()),
         ],
     };
     redstone::verify_redstone_marker(&payload)?;
@@ -38,12 +64,12 @@ pub fn process_redstone_payload(
     for package in &payload.data_packages {
         msg!(
             "Package signer: 0x{}",
-            redstone::bytes_to_hex(&package.signer_address)
+            bytes_to_hex(&package.signer_address)
         );
         for data_point in &package.data_points {
             msg!(
                 "Data point: {} {}",
-                redstone::u256_to_string(data_point.feed_id),
+                u256_to_string(data_point.feed_id),
                 data_point.value.to_string()
             );
         }
@@ -51,11 +77,10 @@ pub fn process_redstone_payload(
     for package in &payload.data_packages {
         for data_point in &package.data_points {
             let price_account = if data_point.feed_id
-                == redstone::u256_from_slice("ETH".as_bytes())
+                == u256_from_slice("ETH".as_bytes())
             {
                 &mut ctx.accounts.eth_price_account
-            } else if data_point.feed_id
-                == redstone::u256_from_slice("BTC".as_bytes())
+            } else if data_point.feed_id == u256_from_slice("BTC".as_bytes())
             {
                 &mut ctx.accounts.btc_price_account
             } else {
@@ -66,7 +91,7 @@ pub fn process_redstone_payload(
             price_account.timestamp = config.block_timestamp;
             price_account.feed_id = data_point.feed_id;
 
-            let feed_id_str = redstone::u256_to_string(data_point.feed_id);
+            let feed_id_str = u256_to_string(data_point.feed_id);
             msg!(
                 "Updated price for feed {}: {} at timestamp {}",
                 feed_id_str,
