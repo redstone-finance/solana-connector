@@ -64,9 +64,6 @@ async function printComputeUnitsUsed(
         console.log(`Compute units used: ${tx.meta.computeUnitsConsumed}`);
         return; // Success, exit the function
       }
-      console.log(
-        `Attempt ${attempt}: Unable to retrieve compute units consumed`
-      );
     } catch (error) {
       // pass
     }
