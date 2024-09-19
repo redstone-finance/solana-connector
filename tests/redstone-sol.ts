@@ -46,6 +46,39 @@ interface PriceData {
   timestamp: string;
 }
 
+// Utility function to print compute units used by a transaction
+async function printComputeUnitsUsed(
+  provider: anchor.AnchorProvider,
+  txSignature: string
+) {
+  const maxRetries = 5;
+  const cooldownMs = 200;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const tx = await provider.connection.getTransaction(txSignature, {
+        maxSupportedTransactionVersion: 0,
+        commitment: "confirmed",
+      });
+      if (tx && tx.meta && tx.meta.computeUnitsConsumed) {
+        console.log(`Compute units used: ${tx.meta.computeUnitsConsumed}`);
+        return; // Success, exit the function
+      }
+      console.log(
+        `Attempt ${attempt}: Unable to retrieve compute units consumed`
+      );
+    } catch (error) {
+      // pass
+    }
+
+    if (attempt < maxRetries) {
+      await new Promise((resolve) => setTimeout(resolve, cooldownMs));
+    }
+  }
+
+  console.log(`Failed to retrieve compute units after ${maxRetries} attempts`);
+}
+
 describe("redstone-sol", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
@@ -88,6 +121,8 @@ describe("redstone-sol", () => {
         .rpc();
 
       console.log("Transaction signature:", tx);
+
+      await printComputeUnitsUsed(provider, tx);
     } catch (error) {
       console.error("Error processing payload:", error);
       throw error; // Re-throw the error to fail the test
@@ -122,6 +157,7 @@ describe("redstone-sol", () => {
         "BTC Price Account Data:",
         deserializePriceData(btcPriceData!.data)
       );
+      await printComputeUnitsUsed(provider, tx);
     } catch (error) {
       console.error(
         "Error processing payload and verifying price accounts:",
