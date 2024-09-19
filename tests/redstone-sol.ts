@@ -17,7 +17,11 @@ const makePayload = async () => {
     "bytes"
   );
 
-  return Buffer.from(JSON.parse(res));
+  const payload = Buffer.from(JSON.parse(res));
+
+  console.log("Payload size:", payload.length);
+
+  return payload;
 };
 
 function deserializePriceData(data: Buffer): PriceData {
@@ -85,6 +89,7 @@ describe("redstone-sol", () => {
   let payload: Buffer;
   let ethPriceAccount: anchor.web3.PublicKey;
   let btcPriceAccount: anchor.web3.PublicKey;
+  let avaxPriceAccount: anchor.web3.PublicKey;
   let cbix: anchor.web3.TransactionInstruction;
 
   before(async () => {
@@ -97,6 +102,11 @@ describe("redstone-sol", () => {
 
     [btcPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("price"), Buffer.from("BTC\0\0")],
+      program.programId
+    );
+
+    [avaxPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("price"), Buffer.from("AVAX\0")],
       program.programId
     );
 
@@ -140,20 +150,21 @@ describe("redstone-sol", () => {
       console.log("Transaction signature:", tx);
 
       // fetch the accounts with provider
-      const ethPriceData = await provider.connection.getAccountInfo(
-        ethPriceAccount
+      const ethPriceData = deserializePriceData(
+        (await provider.connection.getAccountInfo(ethPriceAccount)).data
       );
-      const btcPriceData = await provider.connection.getAccountInfo(
-        btcPriceAccount
+      const btcPriceData = deserializePriceData(
+        (await provider.connection.getAccountInfo(btcPriceAccount)).data
       );
-      console.log(
-        "ETH Price Account Data:",
-        deserializePriceData(ethPriceData!.data)
+      const avaxPriceData = deserializePriceData(
+        (await provider.connection.getAccountInfo(avaxPriceAccount)).data
       );
-      console.log(
-        "BTC Price Account Data:",
-        deserializePriceData(btcPriceData!.data)
-      );
+      ethPriceData.feedId &&
+        console.log("ETH Price Account Data:", ethPriceData);
+      btcPriceData.feedId &&
+        console.log("BTC Price Account Data:", btcPriceData);
+      avaxPriceData.feedId &&
+        console.log("AVAX Price Account Data:", avaxPriceData);
       await printComputeUnitsUsed(provider, tx);
     } catch (error) {
       console.error(

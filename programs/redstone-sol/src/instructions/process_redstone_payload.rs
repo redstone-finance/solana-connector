@@ -26,6 +26,14 @@ pub struct ProcessPayload<'info> {
         bump
     )]
     pub btc_price_account: Account<'info, PriceData>,
+    #[account(
+        init_if_needed,
+        payer = user,
+        space = 8 + std::mem::size_of::<PriceData>(),
+        seeds = [b"price", b"AVAX\0"],
+        bump
+    )]
+    pub avax_price_account: Account<'info, PriceData>,
     pub system_program: Program<'info, System>,
 }
 
@@ -48,6 +56,7 @@ pub fn process_redstone_payload(
         feed_ids: vec![
             u256_from_slice("ETH".as_bytes()),
             u256_from_slice("BTC".as_bytes()),
+            u256_from_slice("AVAX".as_bytes()),
         ],
     };
     redstone::verify_redstone_marker(&payload)?;
@@ -79,6 +88,9 @@ pub fn process_redstone_payload(
     }
     for package in &payload.data_packages {
         for data_point in &package.data_points {
+            // TODO replace this with switch case for all possible feed_ids
+            // all accounts don't need to be passed in, only derived accounts
+            // for the feeds contained within payload
             let price_account = if data_point.feed_id
                 == u256_from_slice("ETH".as_bytes())
             {
@@ -86,6 +98,9 @@ pub fn process_redstone_payload(
             } else if data_point.feed_id == u256_from_slice("BTC".as_bytes())
             {
                 &mut ctx.accounts.btc_price_account
+            } else if data_point.feed_id == u256_from_slice("AVAX".as_bytes())
+            {
+                &mut ctx.accounts.avax_price_account
             } else {
                 return Err(RedstoneError::InvalidPriceAccount.into());
             };
