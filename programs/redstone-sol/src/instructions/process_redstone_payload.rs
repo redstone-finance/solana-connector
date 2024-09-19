@@ -57,21 +57,24 @@ pub fn process_redstone_payload(
 
     redstone::verify_data_packages(&payload, &config)?;
 
-    msg!(
-        "Payload processed successfully: {}",
-        payload.data_packages.len()
-    );
-    for package in &payload.data_packages {
+    #[cfg(feature = "dev")]
+    {
         msg!(
-            "Package signer: 0x{}",
-            bytes_to_hex(&package.signer_address)
+            "Payload processed successfully: {}",
+            payload.data_packages.len()
         );
-        for data_point in &package.data_points {
+        for package in &payload.data_packages {
             msg!(
-                "Data point: {} {}",
-                u256_to_string(data_point.feed_id),
-                data_point.value.to_string()
+                "Package signer: 0x{}",
+                bytes_to_hex(&package.signer_address)
             );
+            for data_point in &package.data_points {
+                msg!(
+                    "Data point: {} {}",
+                    u256_to_string(data_point.feed_id),
+                    data_point.value.to_string()
+                );
+            }
         }
     }
     for package in &payload.data_packages {
@@ -91,13 +94,16 @@ pub fn process_redstone_payload(
             price_account.timestamp = config.block_timestamp;
             price_account.feed_id = data_point.feed_id;
 
-            let feed_id_str = u256_to_string(data_point.feed_id);
-            msg!(
-                "Updated price for feed {}: {} at timestamp {}",
-                feed_id_str,
-                price_account.value,
-                price_account.timestamp
-            );
+            #[cfg(feature = "dev")]
+            {
+                let feed_id_str = u256_to_string(data_point.feed_id);
+                msg!(
+                    "Updated price for feed {}: {} at timestamp {}",
+                    feed_id_str,
+                    price_account.value,
+                    price_account.timestamp
+                );
+            }
         }
     }
 

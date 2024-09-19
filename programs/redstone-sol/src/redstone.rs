@@ -132,8 +132,9 @@ pub fn recover_address(message: &[u8], signature: &[u8]) -> Result<Vec<u8>> {
             let key_hash = keccak256(&pubkey.to_bytes()[1..]);
             Ok(key_hash[12..].to_vec())
         }
-        Err(e) => {
-            msg!("Invalid signature: {:?}: {:?}", signature, e);
+        Err(_e) => {
+            #[cfg(feature = "dev")]
+            msg!("Invalid signature: {:?}: {:?}", signature, _e);
             Err(RedstoneError::InvalidSignature.into())
         }
     }
@@ -156,6 +157,7 @@ pub fn verify_data_packages(
 pub fn verify_timestamp(timestamp: u64, block_timestamp: u64) -> Result<()> {
     // TODO get rid of the debug msgs
     if timestamp + MAX_TIMESTAMP_DELAY_MS < block_timestamp {
+        #[cfg(feature = "dev")]
         msg!(
             "Timestamp: {} + {} < {}",
             timestamp,
@@ -165,6 +167,7 @@ pub fn verify_timestamp(timestamp: u64, block_timestamp: u64) -> Result<()> {
         return Err(RedstoneError::TimestampTooOld.into());
     }
     if timestamp > block_timestamp + MAX_TIMESTAMP_AHEAD_MS {
+        #[cfg(feature = "dev")]
         msg!(
             "Timestamp: {} > {} + {}",
             timestamp,
