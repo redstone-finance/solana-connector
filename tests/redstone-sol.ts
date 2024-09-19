@@ -2,11 +2,12 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { RedstoneSol } from "../target/types/redstone_sol";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
+import { expect } from "chai";
 
 const makePayload = async () => {
   const DATA_SERVICE_ID = "redstone-avalanche-prod";
-  const DATA_FEEDS = ["ETH", "BTC"];
-  const UNIQUE_SIGNER_COUNT = 3;
+  const DATA_FEEDS = ["ETH", "BTC", "AVAX", "USDC", "LINK"];
+  const UNIQUE_SIGNER_COUNT = 1;
 
   const res = await requestRedstonePayload(
     {
@@ -87,9 +88,13 @@ describe("redstone-sol", () => {
   const program = anchor.workspace.RedstoneSol as Program<RedstoneSol>;
 
   let payload: Buffer;
+
   let ethPriceAccount: anchor.web3.PublicKey;
   let btcPriceAccount: anchor.web3.PublicKey;
   let avaxPriceAccount: anchor.web3.PublicKey;
+  let usdcPriceAccount: anchor.web3.PublicKey;
+  let linkPriceAccount: anchor.web3.PublicKey;
+
   let cbix: anchor.web3.TransactionInstruction;
 
   before(async () => {
@@ -107,6 +112,16 @@ describe("redstone-sol", () => {
 
     [avaxPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("price"), Buffer.from("AVAX\0")],
+      program.programId
+    );
+
+    [usdcPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("price"), Buffer.from("USDC\0")],
+      program.programId
+    );
+
+    [linkPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("price"), Buffer.from("LINK\0")],
       program.programId
     );
 
@@ -149,7 +164,6 @@ describe("redstone-sol", () => {
 
       console.log("Transaction signature:", tx);
 
-      // fetch the accounts with provider
       const ethPriceData = deserializePriceData(
         (await provider.connection.getAccountInfo(ethPriceAccount)).data
       );
@@ -159,12 +173,36 @@ describe("redstone-sol", () => {
       const avaxPriceData = deserializePriceData(
         (await provider.connection.getAccountInfo(avaxPriceAccount)).data
       );
+      const usdcPriceData = deserializePriceData(
+        (await provider.connection.getAccountInfo(usdcPriceAccount)).data
+      );
+      const linkPriceData = deserializePriceData(
+        (await provider.connection.getAccountInfo(linkPriceAccount)).data
+      );
+
+      expect(ethPriceData.feedId).to.equal("ETH");
+      expect(btcPriceData.feedId).to.equal("BTC");
+      expect(avaxPriceData.feedId).to.equal("AVAX");
+      expect(usdcPriceData.feedId).to.equal("USDC");
+      expect(linkPriceData.feedId).to.equal("LINK");
+
+      expect(ethPriceData.value).to.not.equal("0");
+      expect(btcPriceData.value).to.not.equal("0");
+      expect(avaxPriceData.value).to.not.equal("0");
+      expect(usdcPriceData.value).to.not.equal("0");
+      expect(linkPriceData.value).to.not.equal("0");
+
       ethPriceData.feedId &&
         console.log("ETH Price Account Data:", ethPriceData);
       btcPriceData.feedId &&
         console.log("BTC Price Account Data:", btcPriceData);
       avaxPriceData.feedId &&
         console.log("AVAX Price Account Data:", avaxPriceData);
+      usdcPriceData.feedId &&
+        console.log("USDC Price Account Data:", usdcPriceData);
+      linkPriceData.feedId &&
+        console.log("LINK Price Account Data:", linkPriceData);
+
       await printComputeUnitsUsed(provider, tx);
     } catch (error) {
       console.error(
