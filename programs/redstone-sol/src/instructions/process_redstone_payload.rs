@@ -13,17 +13,17 @@ pub struct ProcessPayload<'info> {
         payer = user,
         space = 8 + std::mem::size_of::<PriceData>(),
         seeds = [b"price", b"ETH\0\0"],
-        bump
+        bump,
+        constraint = eth_price_account.to_account_info().owner == __program_id
     )]
     pub eth_price_account: Account<'info, PriceData>,
-    // TODO it is important to ensure there is no way to perform
-    // re-initialization attack here
     #[account(
         init_if_needed,
         payer = user,
         space = 8 + std::mem::size_of::<PriceData>(),
         seeds = [b"price", b"BTC\0\0"],
-        bump
+        bump,
+        constraint = btc_price_account.to_account_info().owner == __program_id
     )]
     pub btc_price_account: Account<'info, PriceData>,
     #[account(
@@ -31,7 +31,8 @@ pub struct ProcessPayload<'info> {
         payer = user,
         space = 8 + std::mem::size_of::<PriceData>(),
         seeds = [b"price", b"AVAX\0"],
-        bump
+        bump,
+        constraint = avax_price_account.to_account_info().owner == __program_id
     )]
     pub avax_price_account: Account<'info, PriceData>,
     pub system_program: Program<'info, System>,
