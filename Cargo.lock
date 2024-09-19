@@ -1335,8 +1335,6 @@ dependencies = [
  "anchor-lang",
  "num-derive 0.3.3",
  "num-traits",
- "sha3",
- "thiserror",
 ]
 
 [[package]]

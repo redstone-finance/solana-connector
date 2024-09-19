@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::secp256k1_recover::secp256k1_recover;
-use sha3::{Digest, Keccak256};
 
 use crate::constants::*;
 use crate::error::RedstoneError;
@@ -191,9 +190,8 @@ pub fn verify_signer_count(
     Ok(())
 }
 
-pub fn keccak256(data: &[u8]) -> Box<[u8]> {
-    Keccak256::new_with_prefix(data)
-        .finalize()
-        .as_slice()
-        .into()
+pub fn keccak256(data: &[u8]) -> Vec<u8> {
+    anchor_lang::solana_program::keccak::hash(data)
+        .to_bytes()
+        .to_vec()
 }
