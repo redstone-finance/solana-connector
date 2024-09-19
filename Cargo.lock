@@ -1333,7 +1333,6 @@ name = "redstone-sol"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "bytemuck",
  "num-derive 0.3.3",
  "num-traits",
  "sha3",
