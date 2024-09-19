@@ -118,11 +118,11 @@ pub fn process_redstone_payload(
             }
         }
     }
-    // TODO here, possibly pick max(timestamp) per feed_id and update the
-    // price account only once per each feed_id, as signatures have been
-    // verified at this stage already
+
     for package in &payload.data_packages {
-        for data_point in &package.data_points {
+        // all of the data points have the same values, take the first one
+        // at this stage, all of the signatures are verified
+        if let Some(data_point) = &package.data_points.first() {
             let price_account = match data_point.feed_id {
                 id if id == u256_from_slice("ETH".as_bytes()) => {
                     &mut ctx.accounts.eth_price_account
@@ -149,16 +149,12 @@ pub fn process_redstone_payload(
             price_account.timestamp = config.block_timestamp;
             price_account.feed_id = data_point.feed_id;
 
-            #[cfg(feature = "dev")]
-            {
-                let feed_id_str = u256_to_string(data_point.feed_id);
-                msg!(
-                    "Updated price for feed {}: {} at timestamp {}",
-                    feed_id_str,
-                    price_account.value,
-                    price_account.timestamp
-                );
-            }
+            msg!(
+                "Updated price for feed {}: {} at timestamp {}",
+                u256_to_string(data_point.feed_id),
+                price_account.value,
+                price_account.timestamp
+            );
         }
     }
 
