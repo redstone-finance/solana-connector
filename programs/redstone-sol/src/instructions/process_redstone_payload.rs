@@ -87,6 +87,8 @@ pub fn process_redstone_payload(
             }
         }
     }
+    // TODO here, possibly pick max(timestamp) per feed_id and update the
+    // price account only once per each feed_id
     for package in &payload.data_packages {
         for data_point in &package.data_points {
             // TODO replace this with switch case for all possible feed_ids
