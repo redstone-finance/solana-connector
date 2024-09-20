@@ -27,7 +27,7 @@ fn trim_data_packages(
     payload: &mut Vec<u8>,
     count: usize,
 ) -> Result<Vec<DataPackage>> {
-    let mut data_packages = Vec::new();
+    let mut data_packages = Vec::with_capacity(count);
     for _ in 0..count {
         let data_package = trim_data_package(payload)?;
         data_packages.push(data_package);
@@ -102,7 +102,7 @@ pub fn parse_data_points(
     count: usize,
     value_size: usize,
 ) -> Vec<DataPoint> {
-    let mut data_points = Vec::new();
+    let mut data_points = Vec::with_capacity(count);
 
     for _ in 0..count {
         let data_point = parse_data_point(payload, value_size);

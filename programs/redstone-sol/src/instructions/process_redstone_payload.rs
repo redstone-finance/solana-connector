@@ -77,7 +77,7 @@ pub fn process_redstone_payload(
         block_timestamp,
         signer_count_threshold: 1,
         signers: SIGNERS,
-        feed_ids: vec![
+        feed_ids: [
             u256_from_slice("ETH".as_bytes()),
             u256_from_slice("BTC".as_bytes()),
             u256_from_slice("AVAX".as_bytes()),

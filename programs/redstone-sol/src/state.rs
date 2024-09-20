@@ -34,5 +34,5 @@ pub struct Config {
     pub signer_count_threshold: u8,
     pub block_timestamp: u64,
     pub signers: [SignerAddress; 5],
-    pub feed_ids: Vec<FeedId>,
+    pub feed_ids: [FeedId; 6],
 }
