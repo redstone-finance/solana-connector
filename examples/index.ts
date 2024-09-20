@@ -21,13 +21,13 @@ const connection = new Connection(RPC_URL, "confirmed");
 console.log(`connected to ${RPC_URL}, slot: ${await connection.getSlot()}`);
 
 const signer = Keypair.fromSecretKey(
-  Uint8Array.from(bs58.decode(process.env.PRIVATE_KEY)),
+  Uint8Array.from(bs58.decode(process.env.PRIVATE_KEY))
 );
 
 console.log("Using signer:", signer.publicKey.toBase58());
 
 const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
-const REDSTONE_SOL_PROGRAM_ID = "rsth3cFcxqb7RQXCoEuUwiYvBPxYZZDcdFMHYeUu2HA";
+const REDSTONE_SOL_PROGRAM_ID = "redumH9C5NCb4bMUcf5SjE3ANkLSLMTx8L1WPmuHbAR";
 
 const DATA_SERVICE_ID = "redstone-avalanche-prod";
 const DATA_FEEDS = ["ETH"];
@@ -40,17 +40,18 @@ const makePayload = async () => {
       dataServiceId: DATA_SERVICE_ID,
       uniqueSignersCount: UNIQUE_SIGNER_COUNT,
     },
-    "bytes",
+    "bytes"
   );
 
   const payload = Uint8Array.from(JSON.parse(res));
 
+  console.log(`payload size: ${payload.length} bytes`);
   return payload;
 };
 
 const [ethPriceAccount, _] = PublicKey.findProgramAddressSync(
   [Buffer.from("price"), Buffer.from("ETH\0\0")],
-  new PublicKey(REDSTONE_SOL_PROGRAM_ID),
+  new PublicKey(REDSTONE_SOL_PROGRAM_ID)
 );
 
 const transaction = new Transaction()
@@ -63,7 +64,7 @@ const transaction = new Transaction()
         Uint8Array.from(METHOD_DISCRIMINATOR),
         await makePayload(),
       ]),
-    }),
+    })
   );
 
 try {
