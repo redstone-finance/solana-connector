@@ -29,10 +29,9 @@ pub struct Payload {
     pub data_packages: Vec<DataPackage>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct Config {
     pub signer_count_threshold: u8,
     pub block_timestamp: u64,
-    pub signers: [SignerAddress; 5],
+    pub signers: [SignerAddress; 8],
     pub feed_ids: [FeedId; 6],
 }

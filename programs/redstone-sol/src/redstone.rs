@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::secp256k1_recover::secp256k1_recover;
 
@@ -155,6 +153,7 @@ pub fn verify_data_packages(
     verify_signer_count(
         &payload.data_packages,
         config.signer_count_threshold,
+        &config.signers,
     )?;
     Ok(())
 }
@@ -187,16 +186,30 @@ pub fn verify_timestamp(timestamp: u64, block_timestamp: u64) -> Result<()> {
 pub fn verify_signer_count(
     data_packages: &[DataPackage],
     threshold: u8,
+    signers: &[SignerAddress; 8],
 ) -> Result<()> {
-    let unique_signers_len = data_packages
-        .iter()
-        .map(|dp| dp.signer_address)
-        .collect::<HashSet<_>>()
-        .len();
-    if unique_signers_len < threshold as usize {
-        return Err(RedstoneError::InsufficientSignerCount.into());
+    let mut unique_signers = [false; 8];
+    let mut count: u8 = 0;
+    for package in data_packages {
+        let index = find_signer_index(package.signer_address, signers);
+        if let Some(index) = index {
+            if !unique_signers[index] {
+                unique_signers[index] = true;
+                count += 1;
+            }
+            if count >= threshold {
+                return Ok(());
+            }
+        }
     }
-    Ok(())
+    Err(RedstoneError::InsufficientSignerCount.into())
+}
+
+fn find_signer_index(
+    signer: SignerAddress,
+    signers: &[SignerAddress; 8],
+) -> Option<usize> {
+    signers.iter().position(|&s| s == signer)
 }
 
 pub fn keccak256(data: &[u8]) -> [u8; 32] {
