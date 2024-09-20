@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::secp256k1_recover::secp256k1_recover;
 
@@ -121,7 +123,10 @@ fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     }
 }
 
-pub fn recover_address(message: &[u8], signature: &[u8]) -> Result<Vec<u8>> {
+pub fn recover_address(
+    message: &[u8],
+    signature: &[u8],
+) -> Result<SignerAddress> {
     let recovery_byte = signature[64];
     let recovery_id =
         recovery_byte - (if recovery_byte >= 27 { 27 } else { 0 });
@@ -130,7 +135,7 @@ pub fn recover_address(message: &[u8], signature: &[u8]) -> Result<Vec<u8>> {
     match res {
         Ok(pubkey) => {
             let key_hash = keccak256(&pubkey.to_bytes()[1..]);
-            Ok(key_hash[12..].to_vec())
+            Ok(key_hash[12..].try_into().unwrap())
         }
         Err(_e) => {
             #[cfg(feature = "dev")]
@@ -183,18 +188,17 @@ pub fn verify_signer_count(
     data_packages: &[DataPackage],
     threshold: u8,
 ) -> Result<()> {
-    let unique_signers: std::collections::HashSet<_> = data_packages
+    let unique_signers_len = data_packages
         .iter()
-        .map(|dp| dp.signer_address.clone())
-        .collect();
-    if unique_signers.len() < threshold as usize {
+        .map(|dp| dp.signer_address)
+        .collect::<HashSet<_>>()
+        .len();
+    if unique_signers_len < threshold as usize {
         return Err(RedstoneError::InsufficientSignerCount.into());
     }
     Ok(())
 }
 
-pub fn keccak256(data: &[u8]) -> Vec<u8> {
-    anchor_lang::solana_program::keccak::hash(data)
-        .to_bytes()
-        .to_vec()
+pub fn keccak256(data: &[u8]) -> [u8; 32] {
+    anchor_lang::solana_program::keccak::hash(data).to_bytes()
 }

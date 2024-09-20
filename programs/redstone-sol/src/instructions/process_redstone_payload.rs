@@ -1,3 +1,4 @@
+use crate::constants::SIGNERS;
 use crate::error::RedstoneError;
 use crate::redstone;
 use crate::state::*;
@@ -75,13 +76,7 @@ pub fn process_redstone_payload(
     let config = Config {
         block_timestamp,
         signer_count_threshold: 1,
-        signers: vec![
-            "109B4A318A4F5DDCBCA6349B45F881B4137DEAFB".into(),
-            "12470F7ABA85C8B81D63137DD5925D6EE114952B".into(),
-            "1EA62D73EDF8AC05DFCEA1A34B9796E937A29EFF".into(),
-            "2C59617248994D12816EE1FA77CE0A64EEB456BF".into(),
-            "83CBA8C619FB629B81A65C2E67FE15CF3E3C9747".into(),
-        ],
+        signers: SIGNERS,
         feed_ids: vec![
             u256_from_slice("ETH".as_bytes()),
             u256_from_slice("BTC".as_bytes()),
