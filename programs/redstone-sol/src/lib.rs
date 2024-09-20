@@ -8,7 +8,7 @@ pub mod util;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-declare_id!("H4fqBVqL9QEftuxZq7GH8XjEFSpmRhsGX79K8G6gsTsr");
+declare_id!("rsth3cFcxqb7RQXCoEuUwiYvBPxYZZDcdFMHYeUu2HA");
 
 #[program]
 pub mod redstone_sol {

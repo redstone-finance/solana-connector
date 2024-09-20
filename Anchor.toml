@@ -5,13 +5,16 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-redstone_sol = "rstK87maWhB9ywBwNEzV96rTqLvoUU6oXG3LGoTgyc4"
+redstone_sol = "rsth3cFcxqb7RQXCoEuUwiYvBPxYZZDcdFMHYeUu2HA"
+
+[programs.devnet]
+redstone_sol = "rsth3cFcxqb7RQXCoEuUwiYvBPxYZZDcdFMHYeUu2HA"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

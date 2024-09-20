@@ -1,6 +1,7 @@
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import {
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -26,7 +27,7 @@ const signer = Keypair.fromSecretKey(
 console.log("Using signer:", signer.publicKey.toBase58());
 
 const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
-const REDSTONE_SOL_PROGRAM_ID = "H4fqBVqL9QEftuxZq7GH8XjEFSpmRhsGX79K8G6gsTsr";
+const REDSTONE_SOL_PROGRAM_ID = "rsth3cFcxqb7RQXCoEuUwiYvBPxYZZDcdFMHYeUu2HA";
 
 const DATA_SERVICE_ID = "redstone-avalanche-prod";
 const DATA_FEEDS = ["ETH"];
@@ -52,16 +53,18 @@ const [ethPriceAccount, _] = PublicKey.findProgramAddressSync(
   new PublicKey(REDSTONE_SOL_PROGRAM_ID),
 );
 
-const transaction = new Transaction().add(
-  new TransactionInstruction({
-    keys: [{ pubkey: ethPriceAccount, isSigner: false, isWritable: true }],
-    programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
-    data: Buffer.concat([
-      Uint8Array.from(METHOD_DISCRIMINATOR),
-      await makePayload(),
-    ]),
-  }),
-);
+const transaction = new Transaction()
+  .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 300000 }))
+  .add(
+    new TransactionInstruction({
+      keys: [{ pubkey: ethPriceAccount, isSigner: false, isWritable: true }],
+      programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
+      data: Buffer.concat([
+        Uint8Array.from(METHOD_DISCRIMINATOR),
+        await makePayload(),
+      ]),
+    }),
+  );
 
 try {
   const signature = await sendAndConfirmTransaction(connection, transaction, [
