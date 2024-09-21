@@ -190,6 +190,7 @@ pub fn verify_signer_count(
     let mut unique_signers = [false; 10];
     let mut count: u8 = 0;
     for package in data_packages {
+        #[cfg(feature = "dev")]
         msg!("Package signer: {:?}", package.signer_address);
         let index = find_signer_index(package.signer_address, signers);
         if let Some(index) = index {
