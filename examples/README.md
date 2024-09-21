@@ -1,19 +1,37 @@
 # examples
 
-> [!WARNING]
-> Work in progress, example is broken at the moment
+> [!Info]
+> The example uses the devnet cluster and program at `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
 
-This project was created using `bun init` in bun v1.1.21. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Requirements:
 
-Create `.env` with a `PRIVATE_KEY` set to a base58 encoded private key.
+- `bun` v1.1.21. [Bun](https://bun.sh)
+- Keypair generation and airdrop:
+  - `solana` CLI ^1.18.17
+    [Solana](https://docs.solana.com/cli/install-solana-cli-tools)
+  - `jq` for parsing JSON
 
-You can create one with a wallet like Phantom or Solflare or generate with
-`solana-keygen generate`.
+## Usage
 
-To get some Tesnet SOL, you can use the [Solana
-Faucet](https://solfaucet.com/), or `solana airdrop 1 --url testnet`.
+You need to create a keypair
 
-Then, you can
+```sh
+solana-keygen new -o example-keypair.json
+```
+
+Grab some SOL from the faucet
+
+```sh
+solana airdrop 1 --url devnet --keypair example-keypair.json
+```
+
+Then create a `.env` file with the following content:
+
+```sh
+PRIVATE_KEY_PATH=./example-keypair.json
+```
+
+Then,
 
 ```bash
 bun install

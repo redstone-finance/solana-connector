@@ -1,5 +1,4 @@
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import {
   ComputeBudgetProgram,
@@ -11,7 +10,14 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-if (!process.env.PRIVATE_KEY) {
+const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
+const REDSTONE_SOL_PROGRAM_ID = "2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k";
+const DATA_SERVICE_ID = "redstone-avalanche-prod";
+const FEED_ID = "AVAX";
+const DATA_FEEDS = [FEED_ID];
+const UNIQUE_SIGNER_COUNT = 3;
+
+if (!process.env.PRIVATE_KEY_PATH) {
   throw new Error("PRIVATE_KEY env variable is required");
 }
 
@@ -21,18 +27,15 @@ const connection = new Connection(RPC_URL, "confirmed");
 
 console.log(`connected to ${RPC_URL}, slot: ${await connection.getSlot()}`);
 
-const signer = Keypair.fromSecretKey(
-  Uint8Array.from(bs58.decode(process.env.PRIVATE_KEY))
+// slice the first 32 bytes of the seed to get the private key
+const signer = Keypair.fromSeed(
+  Uint8Array.from(await Bun.file(process.env.PRIVATE_KEY_PATH).json()).slice(
+    0,
+    32
+  )
 );
 
-console.log("Using signer:", signer.publicKey.toBase58());
-
-const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
-const REDSTONE_SOL_PROGRAM_ID = "4QB4mxfFXprhPYN5J9UuzEghNcyFTuNV6wDBZxiAWUEz";
-
-const DATA_SERVICE_ID = "redstone-avalanche-prod";
-const DATA_FEEDS = ["ETH"];
-const UNIQUE_SIGNER_COUNT = 1; // testnet uses 1 but in prod subject to change
+console.log("using signer:", signer.publicKey.toBase58());
 
 const makePayload = async () => {
   const res = await requestRedstonePayload(
@@ -43,24 +46,41 @@ const makePayload = async () => {
     },
     "bytes"
   );
-  console.log(res);
-
-  const payload = Uint8Array.from(JSON.parse(res));
-
-  console.log(`payload size: ${payload.length} bytes`);
-  console.log(`payload: ${payload}`);
-  return payload;
+  return Uint8Array.from(JSON.parse(res));
 };
 
-const [ethPriceAccount, _] = PublicKey.findProgramAddressSync(
-  [Buffer.from("price"), Buffer.from("ETH\0\0")],
+const makeFeedIdBytes = (feedId: string) => {
+  return Buffer.from(feedId.padEnd(32, "\0"));
+};
+
+const makePriceSeed = () => {
+  return Buffer.from("price".padEnd(32, "\0"));
+};
+
+const seeds = [makePriceSeed(), makeFeedIdBytes(FEED_ID)];
+const [priceAccount, _] = PublicKey.findProgramAddressSync(
+  seeds,
   new PublicKey(REDSTONE_SOL_PROGRAM_ID)
 );
 
 const keys = [
-  { pubkey: ethPriceAccount, isSigner: false, isWritable: true },
+  { pubkey: signer.publicKey, isSigner: true, isWritable: true },
+  { pubkey: priceAccount, isSigner: false, isWritable: true },
   { pubkey: SYSTEM_PROGRAM_ID, isSigner: false, isWritable: false },
 ];
+
+const payload = await makePayload();
+
+const sizeIndicator = Buffer.alloc(4);
+sizeIndicator.writeUInt32LE(payload.length);
+
+const data = Buffer.concat([
+  Uint8Array.from(METHOD_DISCRIMINATOR),
+  Uint8Array.from(makeFeedIdBytes(FEED_ID)),
+  // size indicator is a crucial param since using a dynamic Vec<u8> for payload
+  Uint8Array.from(sizeIndicator),
+  payload,
+]);
 
 const transaction = new Transaction()
   .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 300000 }))
@@ -68,10 +88,7 @@ const transaction = new Transaction()
     new TransactionInstruction({
       keys,
       programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
-      data: Buffer.concat([
-        Uint8Array.from(METHOD_DISCRIMINATOR),
-        await makePayload(),
-      ]),
+      data,
     })
   );
 
