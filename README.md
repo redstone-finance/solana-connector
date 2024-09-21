@@ -10,9 +10,9 @@ Maintainers: [Redstone](https://redstone.finance), piotrostr@
 Anchor IDL: `./target/idl/redstone_sol.json`
 `process_redstone_payload` method discriminator: `[49, 96, 127, 141, 118, 203, 237, 178]`
 
-## Example usage
+## Examples
 
-[examples](./examples)
+Check out the `./examples` directory for usage examples.
 
 ## License
 
