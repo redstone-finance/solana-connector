@@ -1,6 +1,6 @@
 # examples
 
-> [!Info]
+> [!NOTE]
 > The example uses the devnet cluster and program at `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
 
 ## Requirements:
