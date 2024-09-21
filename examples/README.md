@@ -1,5 +1,8 @@
 # examples
 
+> [!WARNING]
+> Work in progress, example is broken at the moment
+
 This project was created using `bun init` in bun v1.1.21. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
 
 Create `.env` with a `PRIVATE_KEY` set to a base58 encoded private key.
