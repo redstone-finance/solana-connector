@@ -17,7 +17,6 @@ impl Trim<Vec<u8>> for Vec<u8> {
     }
 }
 
-// helper, debug, can be deleted later
 pub fn u256_to_string(u256: U256) -> String {
     u256.iter()
         .take_while(|&&c| c != 0)
@@ -25,7 +24,7 @@ pub fn u256_to_string(u256: U256) -> String {
         .collect()
 }
 
-// helper, debug, can be deleted later
+#[cfg(feature = "dev")]
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     use std::fmt::Write;
     bytes.iter().fold(

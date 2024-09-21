@@ -1,3 +1,4 @@
+import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import {
@@ -14,7 +15,7 @@ if (!process.env.PRIVATE_KEY) {
   throw new Error("PRIVATE_KEY env variable is required");
 }
 
-const RPC_URL = "https://api.testnet.solana.com";
+const RPC_URL = "https://api.devnet.solana.com";
 
 const connection = new Connection(RPC_URL, "confirmed");
 
@@ -27,7 +28,7 @@ const signer = Keypair.fromSecretKey(
 console.log("Using signer:", signer.publicKey.toBase58());
 
 const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
-const REDSTONE_SOL_PROGRAM_ID = "redumH9C5NCb4bMUcf5SjE3ANkLSLMTx8L1WPmuHbAR";
+const REDSTONE_SOL_PROGRAM_ID = "4QB4mxfFXprhPYN5J9UuzEghNcyFTuNV6wDBZxiAWUEz";
 
 const DATA_SERVICE_ID = "redstone-avalanche-prod";
 const DATA_FEEDS = ["ETH"];
@@ -42,10 +43,12 @@ const makePayload = async () => {
     },
     "bytes"
   );
+  console.log(res);
 
   const payload = Uint8Array.from(JSON.parse(res));
 
   console.log(`payload size: ${payload.length} bytes`);
+  console.log(`payload: ${payload}`);
   return payload;
 };
 
@@ -54,11 +57,16 @@ const [ethPriceAccount, _] = PublicKey.findProgramAddressSync(
   new PublicKey(REDSTONE_SOL_PROGRAM_ID)
 );
 
+const keys = [
+  { pubkey: ethPriceAccount, isSigner: false, isWritable: true },
+  { pubkey: SYSTEM_PROGRAM_ID, isSigner: false, isWritable: false },
+];
+
 const transaction = new Transaction()
   .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 300000 }))
   .add(
     new TransactionInstruction({
-      keys: [{ pubkey: ethPriceAccount, isSigner: false, isWritable: true }],
+      keys,
       programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
       data: Buffer.concat([
         Uint8Array.from(METHOD_DISCRIMINATOR),

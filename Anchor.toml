@@ -4,12 +4,6 @@
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-redstone_sol = "redumH9C5NCb4bMUcf5SjE3ANkLSLMTx8L1WPmuHbAR"
-
-[programs.devnet]
-redstone_sol = "redumH9C5NCb4bMUcf5SjE3ANkLSLMTx8L1WPmuHbAR"
-
 [registry]
 url = "https://api.apr.dev"
 

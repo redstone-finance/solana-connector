@@ -159,7 +159,6 @@ pub fn verify_data_packages(
 }
 
 pub fn verify_timestamp(timestamp: u64, block_timestamp: u64) -> Result<()> {
-    // TODO get rid of the debug msgs
     if timestamp + MAX_TIMESTAMP_DELAY_MS < block_timestamp {
         #[cfg(feature = "dev")]
         msg!(
@@ -186,11 +185,12 @@ pub fn verify_timestamp(timestamp: u64, block_timestamp: u64) -> Result<()> {
 pub fn verify_signer_count(
     data_packages: &[DataPackage],
     threshold: u8,
-    signers: &[SignerAddress; 8],
+    signers: &[SignerAddress; 10],
 ) -> Result<()> {
-    let mut unique_signers = [false; 8];
+    let mut unique_signers = [false; 10];
     let mut count: u8 = 0;
     for package in data_packages {
+        msg!("Package signer: {:?}", package.signer_address);
         let index = find_signer_index(package.signer_address, signers);
         if let Some(index) = index {
             if !unique_signers[index] {
@@ -207,7 +207,7 @@ pub fn verify_signer_count(
 
 fn find_signer_index(
     signer: SignerAddress,
-    signers: &[SignerAddress; 8],
+    signers: &[SignerAddress; 10],
 ) -> Option<usize> {
     signers.iter().position(|&s| s == signer)
 }

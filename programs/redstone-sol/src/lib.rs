@@ -7,8 +7,9 @@ pub mod util;
 
 use anchor_lang::prelude::*;
 use instructions::*;
+use state::*;
 
-declare_id!("redumH9C5NCb4bMUcf5SjE3ANkLSLMTx8L1WPmuHbAR");
+declare_id!("4QB4mxfFXprhPYN5J9UuzEghNcyFTuNV6wDBZxiAWUEz");
 
 #[program]
 pub mod redstone_sol {
@@ -16,8 +17,14 @@ pub mod redstone_sol {
 
     pub fn process_redstone_payload(
         ctx: Context<ProcessPayload>,
+        feed_id: FeedId,
         payload: Vec<u8>,
     ) -> Result<()> {
-        instructions::process_redstone_payload(ctx, payload)
+        msg!(
+            "Processing redstone payload of size {} for {}",
+            payload.len(),
+            util::u256_to_string(feed_id)
+        );
+        instructions::process_redstone_payload(ctx, feed_id, payload)
     }
 }

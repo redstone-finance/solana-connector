@@ -4,14 +4,21 @@ import { RedstoneSol } from "../target/types/redstone_sol";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import { expect } from "chai";
 
-const makePayload = async () => {
+const makeFeedIdBytes = (feedId: string) => {
+  return Buffer.from(feedId.padEnd(32, "\0"));
+};
+
+const makePriceSeed = () => {
+  return Buffer.from("price".padEnd(32, "\0"));
+};
+
+const makePayload = async (dataPackagesIds: Array<string>) => {
   const DATA_SERVICE_ID = "redstone-avalanche-prod";
-  const DATA_FEEDS = ["ETH", "BTC", "AVAX", "USDC", "LINK"];
-  const UNIQUE_SIGNER_COUNT = 1;
+  const UNIQUE_SIGNER_COUNT = 3;
 
   const res = await requestRedstonePayload(
     {
-      dataPackagesIds: DATA_FEEDS,
+      dataPackagesIds,
       dataServiceId: DATA_SERVICE_ID,
       uniqueSignersCount: UNIQUE_SIGNER_COUNT,
     },
@@ -87,129 +94,98 @@ describe("redstone-sol", () => {
 
   const program = anchor.workspace.RedstoneSol as Program<RedstoneSol>;
 
-  let payload: Buffer;
+  const feedIds = [
+    "AVAX",
+    "BAL",
+    "BAL_ggAVAX_AVAX",
+    "BAL_sAVAX_AVAX",
+    "BAL_yyAVAX_AVAX",
+    "BTC",
+    "CAI",
+    "CRV",
+    "DAI",
+    "ETH",
+    "EUROC",
+    "GLP",
+    "GMX",
+    "GM_AVAX_WAVAX",
+    "GM_AVAX_WAVAX_USDC",
+    "GM_BTC_BTCb",
+    "GM_BTC_BTCb_USDC",
+    "GM_ETH_WETHe",
+    "GM_ETH_WETHe_USDC",
+    "GM_SOL_SOL_USDC",
+    "IB01.L",
+    "JOE",
+    "LINK",
+    "PNG",
+    "PNG_AVAX_ETH_LP",
+    "PNG_AVAX_USDC_LP",
+    "PNG_AVAX_USDT_LP",
+    "PRIME",
+    "QI",
+    "SHLB_GMX-AVAX_B",
+    "SOL",
+    "TJ_AVAX_USDC_AUTO",
+    "USDC",
+    "USDT",
+    "WOMBAT_ggAVAX_AVAX_LP_AVAX",
+    "WOMBAT_ggAVAX_AVAX_LP_ggAVAX",
+    "WOMBAT_sAVAX_AVAX_LP_AVAX",
+    "WOMBAT_sAVAX_AVAX_LP_sAVAX",
+    "XAVA",
+    "YYAV3SA1",
+    "YY_AAVE_AVAX",
+    "YY_GLP",
+    "YY_PNG_AVAX_ETH_LP",
+    "YY_PNG_AVAX_USDC_LP",
+    "crvUSDBTCETH",
+    "ggAVAX",
+    "gmdAVAX",
+    "gmdBTC",
+    "gmdETH",
+    "gmdUSDC",
+    "sAVAX",
+    "yyAVAX",
+  ];
 
-  let ethPriceAccount: anchor.web3.PublicKey;
-  let btcPriceAccount: anchor.web3.PublicKey;
-  let avaxPriceAccount: anchor.web3.PublicKey;
-  let usdcPriceAccount: anchor.web3.PublicKey;
-  let linkPriceAccount: anchor.web3.PublicKey;
-
-  let cbix: anchor.web3.TransactionInstruction;
+  let pdas = {};
 
   before(async () => {
-    payload = await makePayload();
-    // Derive price account addresses
-    [ethPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("price"), Buffer.from("ETH\0\0")],
-      program.programId
-    );
+    for (const feedId of feedIds) {
+      pdas[feedId] = anchor.web3.PublicKey.findProgramAddressSync(
+        [makePriceSeed(), makeFeedIdBytes(feedId)],
+        program.programId
+      )[0];
+    }
+  });
 
-    [btcPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("price"), Buffer.from("BTC\0\0")],
-      program.programId
-    );
+  async function testFeedIdPush(feedId: string) {
+    it(`Updates correctly for ${feedId} feed`, async () => {
+      const payload = await makePayload([feedId]);
+      const feedIdBytes = makeFeedIdBytes(feedId);
+      const priceAccount = pdas[feedId];
+      const tx = await program.methods
+        .processRedstonePayload(Array.from(feedIdBytes), payload)
+        .accountsStrict({
+          user: provider.wallet.publicKey,
+          priceAccount,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .rpc({ skipPreflight: true });
 
-    [avaxPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("price"), Buffer.from("AVAX\0")],
-      program.programId
-    );
+      await printComputeUnitsUsed(provider, tx);
 
-    [usdcPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("price"), Buffer.from("USDC\0")],
-      program.programId
-    );
+      const priceAccountData = deserializePriceData(
+        (await provider.connection.getAccountInfo(priceAccount)).data
+      );
 
-    [linkPriceAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("price"), Buffer.from("LINK\0")],
-      program.programId
-    );
+      expect(priceAccountData.feedId).to.equal(feedId);
+      expect(priceAccountData.value).to.not.equal("0");
 
-    // Set up compute budget instruction
-    cbix = anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
-      units: 10 ** 6,
+      console.log(`${feedId}: ${JSON.stringify(priceAccountData)}`);
     });
-  });
+  }
 
-  it.skip("Processes Redstone payload successfully", async () => {
-    try {
-      // Process the payload
-      const tx = await program.methods
-        .processRedstonePayload(payload)
-        .preInstructions([cbix])
-        .accounts({
-          user: provider.wallet.publicKey,
-        })
-        .rpc();
-
-      console.log("Transaction signature:", tx);
-
-      await printComputeUnitsUsed(provider, tx);
-    } catch (error) {
-      console.error("Error processing payload:", error);
-      throw error; // Re-throw the error to fail the test
-    }
-  });
-
-  it("Updates price accounts correctly", async () => {
-    try {
-      // Process the payload
-      const tx = await program.methods
-        .processRedstonePayload(payload)
-        .preInstructions([cbix])
-        .accounts({
-          user: provider.wallet.publicKey,
-        })
-        .rpc();
-
-      console.log("Transaction signature:", tx);
-
-      const ethPriceData = deserializePriceData(
-        (await provider.connection.getAccountInfo(ethPriceAccount)).data
-      );
-      const btcPriceData = deserializePriceData(
-        (await provider.connection.getAccountInfo(btcPriceAccount)).data
-      );
-      const avaxPriceData = deserializePriceData(
-        (await provider.connection.getAccountInfo(avaxPriceAccount)).data
-      );
-      const usdcPriceData = deserializePriceData(
-        (await provider.connection.getAccountInfo(usdcPriceAccount)).data
-      );
-      const linkPriceData = deserializePriceData(
-        (await provider.connection.getAccountInfo(linkPriceAccount)).data
-      );
-
-      expect(ethPriceData.feedId).to.equal("ETH");
-      expect(btcPriceData.feedId).to.equal("BTC");
-      expect(avaxPriceData.feedId).to.equal("AVAX");
-      expect(usdcPriceData.feedId).to.equal("USDC");
-      expect(linkPriceData.feedId).to.equal("LINK");
-
-      expect(ethPriceData.value).to.not.equal("0");
-      expect(btcPriceData.value).to.not.equal("0");
-      expect(avaxPriceData.value).to.not.equal("0");
-      expect(usdcPriceData.value).to.not.equal("0");
-      expect(linkPriceData.value).to.not.equal("0");
-
-      ethPriceData.feedId &&
-        console.log("ETH Price Account Data:", ethPriceData);
-      btcPriceData.feedId &&
-        console.log("BTC Price Account Data:", btcPriceData);
-      avaxPriceData.feedId &&
-        console.log("AVAX Price Account Data:", avaxPriceData);
-      usdcPriceData.feedId &&
-        console.log("USDC Price Account Data:", usdcPriceData);
-      linkPriceData.feedId &&
-        console.log("LINK Price Account Data:", linkPriceData);
-
-      await printComputeUnitsUsed(provider, tx);
-    } catch (error) {
-      console.error(
-        "Error processing payload and verifying price accounts:",
-        error
-      );
-      throw error;
-    }
-  });
+  feedIds.forEach(testFeedIdPush);
 });

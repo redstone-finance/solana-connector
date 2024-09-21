@@ -32,6 +32,6 @@ pub struct Payload {
 pub struct Config {
     pub signer_count_threshold: u8,
     pub block_timestamp: u64,
-    pub signers: [SignerAddress; 8],
-    pub feed_ids: [FeedId; 6],
+    pub signers: [SignerAddress; 10],
+    pub feed_ids: [FeedId; 52],
 }
