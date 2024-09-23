@@ -1,7 +1,7 @@
 # examples
 
 > [!NOTE]
-> The example uses the devnet cluster and program at `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
+> The example uses the testnet cluster and program at `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
 
 ## Requirements:
 
@@ -22,7 +22,7 @@ solana-keygen new -o example-keypair.json
 Grab some SOL from the faucet
 
 ```sh
-solana airdrop 1 --url devnet --keypair example-keypair.json
+solana airdrop 1 --url testnet --keypair example-keypair.json
 ```
 
 Then create a `.env` file with the following content:

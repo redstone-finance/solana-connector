@@ -21,7 +21,7 @@ if (!process.env.PRIVATE_KEY_PATH) {
   throw new Error("PRIVATE_KEY env variable is required");
 }
 
-const RPC_URL = "https://api.devnet.solana.com";
+const RPC_URL = "https://api.testnet.solana.com";
 
 const connection = new Connection(RPC_URL, "confirmed");
 
@@ -31,8 +31,8 @@ console.log(`connected to ${RPC_URL}, slot: ${await connection.getSlot()}`);
 const signer = Keypair.fromSeed(
   Uint8Array.from(await Bun.file(process.env.PRIVATE_KEY_PATH).json()).slice(
     0,
-    32
-  )
+    32,
+  ),
 );
 
 console.log("using signer:", signer.publicKey.toBase58());
@@ -44,7 +44,7 @@ const makePayload = async () => {
       dataServiceId: DATA_SERVICE_ID,
       uniqueSignersCount: UNIQUE_SIGNER_COUNT,
     },
-    "bytes"
+    "bytes",
   );
   return Uint8Array.from(JSON.parse(res));
 };
@@ -60,7 +60,7 @@ const makePriceSeed = () => {
 const seeds = [makePriceSeed(), makeFeedIdBytes(FEED_ID)];
 const [priceAccount, _] = PublicKey.findProgramAddressSync(
   seeds,
-  new PublicKey(REDSTONE_SOL_PROGRAM_ID)
+  new PublicKey(REDSTONE_SOL_PROGRAM_ID),
 );
 
 const keys = [
@@ -89,7 +89,7 @@ const transaction = new Transaction()
       keys,
       programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
       data,
-    })
+    }),
   );
 
 try {
