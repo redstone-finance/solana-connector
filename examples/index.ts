@@ -69,34 +69,50 @@ const keys = [
   { pubkey: SYSTEM_PROGRAM_ID, isSigner: false, isWritable: false },
 ];
 
-const payload = await makePayload();
+const makeInstructionData = async () => {
+  const payload = await makePayload();
 
-const sizeIndicator = Buffer.alloc(4);
-sizeIndicator.writeUInt32LE(payload.length);
+  const sizeIndicator = Buffer.alloc(4);
+  sizeIndicator.writeUInt32LE(payload.length);
 
-const data = Buffer.concat([
-  Uint8Array.from(METHOD_DISCRIMINATOR),
-  Uint8Array.from(makeFeedIdBytes(FEED_ID)),
-  // size indicator is a crucial param since using a dynamic Vec<u8> for payload
-  Uint8Array.from(sizeIndicator),
-  payload,
-]);
-
-const transaction = new Transaction()
-  .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 300000 }))
-  .add(
-    new TransactionInstruction({
-      keys,
-      programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
-      data,
-    }),
-  );
-
-try {
-  const signature = await sendAndConfirmTransaction(connection, transaction, [
-    signer,
+  const data = Buffer.concat([
+    Uint8Array.from(METHOD_DISCRIMINATOR),
+    Uint8Array.from(makeFeedIdBytes(FEED_ID)),
+    // size indicator is a crucial param since using a dynamic Vec<u8> for payload
+    Uint8Array.from(sizeIndicator),
+    payload,
   ]);
-  console.log("Transaction sent successfully. Signature:", signature);
-} catch (error) {
-  console.error("Error sending transaction:", error);
+
+  return data;
+};
+
+console.log("Pushing data in a loop");
+while (true) {
+  try {
+    const transaction = new Transaction().add(
+      new TransactionInstruction({
+        keys,
+        programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
+        data: await makeInstructionData(),
+      }),
+    );
+    try {
+      const signature = await sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [signer],
+      );
+      console.log(`${Date.now()}: ${signature}`);
+    } catch (error) {
+      console.error("Error sending transaction:", error);
+    }
+  } catch (error) {
+    console.error("Error making transaction:", error);
+  }
+
+  await sleep(60 * 1000);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
