@@ -1,10 +1,17 @@
+import { getConnection, getSigner, setupProgram } from "./config";
+import { getPrice } from "./price";
 import { makeTransaction, sendTransaction } from "./tx";
-import { setupProgram, getConnection, getSigner } from "./config";
 import { sleep } from "./util";
 
 async function main() {
   const program = setupProgram();
   const options = program.opts();
+
+  if (options.checkPrice) {
+    const price = await getPrice(options.checkPrice, options.network);
+    console.log(price);
+    return;
+  }
 
   if (!options.privateKey || !options.feedId || !options.network) {
     console.log(program.helpInformation());

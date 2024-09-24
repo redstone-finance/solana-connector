@@ -1,5 +1,5 @@
-import { Command } from "commander";
 import { Connection, Keypair } from "@solana/web3.js";
+import { Command } from "commander";
 
 export const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
 export const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
@@ -14,9 +14,10 @@ export function setupProgram(): Command {
     .option(
       "-n, --network <network>",
       "Network to use (testnet or mainnet-beta)",
-      "testnet",
+      "testnet"
     )
     .option("-f, --feed-id <id>", "Feed ID to use", "AVAX")
+    .option("-c, --check-price <id>", "Check price for a given feed ID")
     .parse(process.argv);
 }
 
@@ -33,6 +34,6 @@ export async function getConnection(network: string): Promise<Connection> {
 
 export async function getSigner(privateKeyPath: string): Promise<Keypair> {
   return Keypair.fromSeed(
-    Uint8Array.from(await Bun.file(privateKeyPath).json()).slice(0, 32),
+    Uint8Array.from(await Bun.file(privateKeyPath).json()).slice(0, 32)
   );
 }
