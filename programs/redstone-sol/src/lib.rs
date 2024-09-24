@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-declare_id!("2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k");
+declare_id!("3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T");
 
 #[program]
 pub mod redstone_sol {

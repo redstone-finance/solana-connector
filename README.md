@@ -4,8 +4,9 @@ Maintainers: [Redstone](https://redstone.finance), piotrostr@
 
 ## Deployments:
 
-- Devnet: `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
-- Testnet: `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
+- Mainnet: `3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T`
+- Devnet: `3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T`
+- Testnet: `3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T`
 
 Anchor IDL: `./target/idl/redstone_sol.json`
 

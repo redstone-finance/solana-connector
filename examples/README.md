@@ -29,7 +29,10 @@ Then create a `.env` file with the following content:
 
 ```sh
 PRIVATE_KEY_PATH=./example-keypair.json
+MAINNET=false
 ```
+
+put `true` for mainnet use, but then the keypair has to hold some real SOL
 
 Then,
 

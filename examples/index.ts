@@ -1,7 +1,6 @@
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import {
-  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -11,7 +10,7 @@ import {
 } from "@solana/web3.js";
 
 const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
-const REDSTONE_SOL_PROGRAM_ID = "2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k";
+const REDSTONE_SOL_PROGRAM_ID = "3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T";
 const DATA_SERVICE_ID = "redstone-avalanche-prod";
 const FEED_ID = "AVAX";
 const DATA_FEEDS = [FEED_ID];
@@ -21,7 +20,15 @@ if (!process.env.PRIVATE_KEY_PATH) {
   throw new Error("PRIVATE_KEY env variable is required");
 }
 
-const RPC_URL = "https://api.testnet.solana.com";
+let network = "testnet";
+
+if (process.env.MAINNET && process.env.MAINNET === "true") {
+  network = "mainnet-beta";
+  console.log(
+    "using mainnet-beta, consider using RPC provider for production!",
+  );
+}
+const RPC_URL = `https://api.${network}.solana.com`;
 
 const connection = new Connection(RPC_URL, "confirmed");
 
