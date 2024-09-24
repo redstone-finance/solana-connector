@@ -37,6 +37,8 @@ Then,
 bun install
 ```
 
+### Push Data
+
 - Testnet
 
 ```bash
@@ -53,4 +55,22 @@ bun run index.ts \
   --private-key $HOME/.config/solana/id.json \
   --network mainnet-beta \
   --feed-id AVAX # or BTC, ETH, etc., any feed from redstone avax prod service
+```
+
+### Check Price
+
+- Testnet
+
+```bash
+bun run index.ts \
+  --check-price AVAX \
+  --network testnet
+```
+
+- Mainnet
+
+```bash
+bun run index.ts \
+  --check-price AVAX \
+  --network mainnet
 ```

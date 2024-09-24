@@ -2,7 +2,7 @@
 
 Maintainers: [Redstone](https://redstone.finance), piotrostr@
 
-## Deployments:
+## Deployments
 
 - Mainnet: `3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T`
 - Devnet: `3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T`
