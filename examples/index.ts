@@ -1,3 +1,4 @@
+import { Command } from "commander";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import {
@@ -9,40 +10,52 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
+const program = new Command();
+
+program
+  .option("-k, --private-key <path>", "Path to the private key file")
+  .option(
+    "-n, --network <network>",
+    "Network to use (testnet or mainnet-beta)",
+    "testnet",
+  )
+  .option("-f, --feed-id <id>", "Feed ID to use", "AVAX")
+  .parse(process.argv);
+
+const options = program.opts();
+
+if (!options.privateKey || !options.feedId || !options.network) {
+  // print help
+  console.log(program.helpInformation());
+  process.exit(1);
+}
+
 const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
 const REDSTONE_SOL_PROGRAM_ID = "3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T";
 const DATA_SERVICE_ID = "redstone-avalanche-prod";
-const FEED_ID = "AVAX";
+const FEED_ID = options.feedId;
 const DATA_FEEDS = [FEED_ID];
 const UNIQUE_SIGNER_COUNT = 3;
 
-if (!process.env.PRIVATE_KEY_PATH) {
-  throw new Error("PRIVATE_KEY env variable is required");
+if (!options.privateKey) {
+  throw new Error("Private key path is required");
 }
 
-let network = "testnet";
-
-if (process.env.MAINNET && process.env.MAINNET === "true") {
-  network = "mainnet-beta";
-  console.log(
-    "using mainnet-beta, consider using RPC provider for production!",
-  );
+const network = options.network;
+let RPC_URL = `https://api.${network}.solana.com`;
+if (network === "mainnet-beta" && process.env.RPC_URL) {
+  RPC_URL = process.env.RPC_URL;
 }
-const RPC_URL = `https://api.${network}.solana.com`;
 
 const connection = new Connection(RPC_URL, "confirmed");
 
-console.log(`connected to ${RPC_URL}, slot: ${await connection.getSlot()}`);
+console.log(`Connected to ${RPC_URL}, slot: ${await connection.getSlot()}`);
 
-// slice the first 32 bytes of the seed to get the private key
 const signer = Keypair.fromSeed(
-  Uint8Array.from(await Bun.file(process.env.PRIVATE_KEY_PATH).json()).slice(
-    0,
-    32,
-  ),
+  Uint8Array.from(await Bun.file(options.privateKey).json()).slice(0, 32),
 );
 
-console.log("using signer:", signer.publicKey.toBase58());
+console.log("Using signer:", signer.publicKey.toBase58());
 
 const makePayload = async () => {
   const res = await requestRedstonePayload(
@@ -85,7 +98,6 @@ const makeInstructionData = async () => {
   const data = Buffer.concat([
     Uint8Array.from(METHOD_DISCRIMINATOR),
     Uint8Array.from(makeFeedIdBytes(FEED_ID)),
-    // size indicator is a crucial param since using a dynamic Vec<u8> for payload
     Uint8Array.from(sizeIndicator),
     payload,
   ]);

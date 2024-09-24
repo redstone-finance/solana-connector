@@ -25,14 +25,11 @@ Grab some SOL from the faucet
 solana airdrop 1 --url testnet --keypair example-keypair.json
 ```
 
-Then create a `.env` file with the following content:
+For mainnet use, the keypair has to hold some real SOL, pushing a single feed
+ID with 3 signers costs like 0.000005 SOL
 
-```sh
-PRIVATE_KEY_PATH=./example-keypair.json
-MAINNET=false
-```
-
-put `true` for mainnet use, but then the keypair has to hold some real SOL
+To run for multiple feeds, start a separate process for each, max 1 feed ID per
+process
 
 Then,
 
@@ -40,8 +37,20 @@ Then,
 bun install
 ```
 
-and
+- Testnet
 
 ```bash
-bun run index.ts
+bun run index.ts \
+  --private-key ./example-keypair.json \
+  --network testnet \
+  --feed-id AVAX # or BTC, ETH, etc., any feed from redstone avax prod service
+```
+
+- Mainnet
+
+```bash
+bun run index.ts \
+  --private-key $HOME/.config/solana/id.json \
+  --network mainnet-beta \
+  --feed-id AVAX # or BTC, ETH, etc., any feed from redstone avax prod service
 ```
