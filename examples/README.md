@@ -3,7 +3,7 @@
 > [!NOTE]
 > The example uses the testnet cluster and program at `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
 
-## Requirements:
+## Requirements
 
 - `bun` v1.1.21. [Bun](https://bun.sh)
 - Keypair generation and airdrop:
