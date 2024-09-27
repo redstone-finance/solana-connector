@@ -13,8 +13,8 @@ import {
   DATA_SERVICE_ID,
   UNIQUE_SIGNER_COUNT,
   METHOD_DISCRIMINATOR,
-} from "./config";
-import { makeFeedIdBytes, makePriceSeed } from "./util";
+} from "./config.js";
+import { makeFeedIdBytes, makePriceSeed } from "./util.js";
 
 export async function makeTransaction(
   signer: Keypair,

@@ -1,7 +1,7 @@
-import { getConnection, getSigner, setupProgram } from "./config";
-import { getPrice } from "./price";
-import { makeTransaction, sendTransaction } from "./tx";
-import { sleep } from "./util";
+import { getConnection, getSigner, setupProgram } from "./config.js";
+import { getPrice } from "./price.js";
+import { makeTransaction, sendTransaction } from "./tx.js";
+import { sleep } from "./util.js";
 
 async function main() {
   const program = setupProgram();

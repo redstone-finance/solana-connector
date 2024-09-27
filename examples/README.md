@@ -5,8 +5,8 @@
 
 ## Requirements
 
-- `bun` v1.1.21. [Bun](https://bun.sh)
 - Keypair generation and airdrop:
+  - node and npm, used 20.15.0 and 10.7.0
   - `solana` CLI ^1.18.17
     [Solana](https://docs.solana.com/cli/install-solana-cli-tools)
   - `jq` for parsing JSON
@@ -34,7 +34,7 @@ process
 Then,
 
 ```bash
-bun install
+npm install && npm run build
 ```
 
 ### Push Data
@@ -42,7 +42,7 @@ bun install
 - Testnet
 
 ```bash
-bun run index.ts \
+npm run start -- \
   --private-key ./example-keypair.json \
   --network testnet \
   --feed-id AVAX # or BTC, ETH, etc., any feed from redstone avax prod service
@@ -51,7 +51,7 @@ bun run index.ts \
 - Mainnet
 
 ```bash
-bun run index.ts \
+npm run start -- \
   --private-key $HOME/.config/solana/id.json \
   --network mainnet-beta \
   --feed-id AVAX # or BTC, ETH, etc., any feed from redstone avax prod service
@@ -62,7 +62,7 @@ bun run index.ts \
 - Testnet
 
 ```bash
-bun run index.ts \
+npm run start -- \
   --check-price AVAX \
   --network testnet
 ```
@@ -70,7 +70,7 @@ bun run index.ts \
 - Mainnet
 
 ```bash
-bun run index.ts \
+npm run start -- \
   --check-price AVAX \
   --network mainnet
 ```
