@@ -1,3 +1,4 @@
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { Connection, Keypair } from "@solana/web3.js";
 import { Command } from "commander";
 import { readFile } from "fs/promises";
@@ -40,4 +41,9 @@ export async function getSigner(privateKeyPath: string): Promise<Keypair> {
       32,
     ),
   );
+}
+
+export function getSignerFromPrivateKey(privateKey: string): Keypair {
+  const decodedPrivateKey = bs58.decode(privateKey);
+  return Keypair.fromSecretKey(Uint8Array.from(decodedPrivateKey));
 }
