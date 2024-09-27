@@ -3,13 +3,13 @@ pub mod redstone_sdk;
 use std::str::FromStr;
 
 use redstone_sdk::RedstoneClient;
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::{
-    instruction::Instruction,
+use solana_client_wasm::solana_sdk::{
+    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+use solana_client_wasm::WasmClient;
 use worker::*;
 
 const SYSTEM_PROGRAM_ID: &str = "11111111111111111111111111111111";
@@ -20,25 +20,39 @@ const DATA_SERVICE_ID: &str = "redstone-avalanche-prod";
 const UNIQUE_SIGNER_COUNT: u8 = 3;
 
 #[event(fetch)]
-pub async fn fetch(
+pub async fn main(
     _req: Request,
     env: Env,
     _ctx: worker::Context,
 ) -> Result<Response> {
-    let rpc_url = env.secret("RPC_URL")?.to_string();
-    let private_key = env.secret("PRIVATE_KEY")?.to_string();
-    let feed_id = "AVAX".to_string(); // this can be configurable
+    console_log!("Fetch function called");
 
-    let client = RpcClient::new(rpc_url);
-    let keypair = Keypair::from_base58_string(&private_key);
+    let result: Result<String> = async {
+        let rpc_url = env.secret("RPC_URL").map_err(|e| {
+            console_error!("Failed to get RPC_URL: {:?}", e);
+            Error::from("Missing RPC_URL environment variable")
+        })?;
 
-    console_log!("Using signer: {}", keypair.pubkey());
+        let private_key = env.secret("PRIVATE_KEY").map_err(|e| {
+            console_error!("Failed to get PRIVATE_KEY: {:?}", e);
+            Error::from("Missing PRIVATE_KEY environment variable")
+        })?;
 
-    match push_data(&client, &keypair, feed_id).await {
-        Ok(signature) => {
-            console_log!("{}: {}", Date::now(), signature);
-            Response::ok(format!("Data pushed successfully: {}", signature))
-        }
+        let feed_id = "AVAX".to_string(); // this can be configurable
+
+        let client = WasmClient::new(&rpc_url.to_string());
+        let keypair = Keypair::from_base58_string(&private_key.to_string());
+
+        console_log!("Using signer: {}", keypair.pubkey());
+
+        let signature = push_data(&client, &keypair, feed_id).await?;
+        console_log!("{}: {}", Date::now(), signature);
+        Ok(format!("Data pushed successfully: {}", signature).to_string())
+    }
+    .await;
+
+    match result {
+        Ok(message) => Response::ok(message),
         Err(e) => {
             console_error!("Error: {:?}", e);
             Response::error(format!("Error: {:?}", e), 500)
@@ -47,25 +61,28 @@ pub async fn fetch(
 }
 
 async fn push_data(
-    client: &RpcClient,
+    client: &WasmClient,
     signer: &Keypair,
     feed_id: String,
 ) -> Result<String> {
+    console_log!("Pushing data for feed: {}", feed_id);
     let transaction = make_transaction(client, signer, feed_id).await?;
+    console_log!("Transaction created");
     let signature = send_transaction(client, transaction).await?;
+    console_log!("Transaction sent");
     Ok(signature)
 }
 
 async fn make_transaction(
-    client: &RpcClient,
+    client: &WasmClient,
     signer: &Keypair,
     feed_id: String,
 ) -> Result<Transaction> {
     let price_account = get_price_account(feed_id.clone());
     let keys = vec![
-        solana_sdk::instruction::AccountMeta::new(signer.pubkey(), true),
-        solana_sdk::instruction::AccountMeta::new(price_account, false),
-        solana_sdk::instruction::AccountMeta::new_readonly(
+        AccountMeta::new(signer.pubkey(), true),
+        AccountMeta::new(price_account, false),
+        AccountMeta::new_readonly(
             Pubkey::from_str(SYSTEM_PROGRAM_ID).expect("pubkey"),
             false,
         ),
@@ -91,7 +108,7 @@ async fn make_transaction(
 
 // TODO implement retries here or use jito
 async fn send_transaction(
-    client: &RpcClient,
+    client: &WasmClient,
     transaction: Transaction,
 ) -> Result<String> {
     let signature =

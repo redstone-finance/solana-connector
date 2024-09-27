@@ -16,16 +16,21 @@ struct DataPackagesRequestParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct DataPoint {
+    #[serde(rename = "dataFeedId")]
     data_feed_id: FeedId,
     value: f64,
-    decimals: Option<u8>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct SignedDataPackage {
-    data_points: Vec<DataPoint>,
+    #[serde(rename = "timestampMilliseconds")]
     timestamp_milliseconds: u64,
-    signature: String,
+    #[serde(rename = "dataPoints")]
+    data_points: Vec<DataPoint>,
+    #[serde(rename = "signerAddress")]
+    signer_address: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -55,12 +60,13 @@ impl RedstoneClient {
         let signed_data_packages = response
             .data_packages
             .values()
-            .flatten()
-            .cloned()
+            .flat_map(|v| v.iter().cloned())
             .collect::<Vec<_>>();
 
         let payload = RedstonePayload::new(signed_data_packages);
-        Ok(payload.to_bytes())
+        let res = payload.to_bytes();
+        console_log!("Payload: {} bytes", res.len());
+        Ok(res)
     }
 
     async fn request_data_packages(
@@ -74,21 +80,30 @@ impl RedstoneClient {
                 "{}/data-packages/latest/{}",
                 url, params.data_service_id
             );
-            let query_params =
-                format!("dataFeedIds={}", params.data_packages_ids.join(","));
+            let query_params = format!(
+                "dataFeedIds={}&dataPackagesIds={}&minimalSignerCount={}",
+                params.data_packages_ids.join(","),
+                params.data_packages_ids.join(","),
+                params.unique_signers_count
+            );
             let request_url = format!("{}?{}", fetch_url, query_params);
+            console_log!("Requesting data packages from: {}", request_url);
 
             let mut response =
                 Fetch::Url(request_url.parse()?).send().await?;
 
+            console_log!("Redstone gateway: {}", response.status_code());
+
             if response.status_code() == 200 {
-                return response.json().await;
+                let response_text = response.text().await?;
+                let res = serde_json::from_str(&response_text).map_err(|e| {
+                    Error::from(format!("Failed to parse response: {:?}", e))
+                });
+                return res;
             }
         }
 
-        Err(Error::from(
-            "Failed to fetch data packages from all gateways",
-        ))
+        Err(Error::from("Failed to fetch data packages from gateways"))
     }
 
     fn resolve_data_service_urls(&self) -> Vec<String> {
@@ -111,8 +126,6 @@ impl RedstonePayload {
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        // Implement the logic to convert the payload to bytes
-        // This is a simplified version and may need to be adjusted based on the exact protocol
         let mut bytes = Vec::new();
         for package in &self.signed_data_packages {
             bytes.extend_from_slice(
@@ -122,8 +135,8 @@ impl RedstonePayload {
                 bytes.extend_from_slice(point.data_feed_id.as_bytes());
                 bytes.extend_from_slice(&(point.value as u64).to_be_bytes());
             }
-            bytes
-                .extend_from_slice(&hex::decode(&package.signature).unwrap());
+
+            bytes.extend_from_slice(package.signature.as_bytes());
         }
         bytes
     }
