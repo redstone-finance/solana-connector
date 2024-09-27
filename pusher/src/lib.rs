@@ -20,7 +20,7 @@ const DATA_SERVICE_ID: &str = "redstone-avalanche-prod";
 const UNIQUE_SIGNER_COUNT: u8 = 3;
 
 #[event(fetch)]
-pub async fn main(
+pub async fn fetch(
     _req: Request,
     env: Env,
     _ctx: worker::Context,

@@ -2457,6 +2457,7 @@ dependencies = [
  "solana-client",
  "solana-sdk",
  "worker",
+ "worker-macros",
 ]
 
 [[package]]
