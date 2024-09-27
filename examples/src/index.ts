@@ -1,4 +1,9 @@
-export { getConnection, getSigner, getSignerFromPrivateKey } from "./config";
+export {
+  getConnection,
+  getSigner,
+  getSignerFromPrivateKey,
+  getConnectionFromRpcUrl,
+} from "./config";
 export { getPrice } from "./price";
 export { makeTransaction, sendTransaction } from "./tx";
 export {

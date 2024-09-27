@@ -34,6 +34,14 @@ export async function getConnection(network: string): Promise<Connection> {
   return connection;
 }
 
+export async function getConnectionFromRpcUrl(
+  rpcUrl: string,
+): Promise<Connection> {
+  const connection = new Connection(rpcUrl, "confirmed");
+  console.log(`Connected to ${rpcUrl}, slot: ${await connection.getSlot()}`);
+  return connection;
+}
+
 export async function getSigner(privateKeyPath: string): Promise<Keypair> {
   return Keypair.fromSeed(
     Uint8Array.from(JSON.parse(await readFile(privateKeyPath, "utf-8"))).slice(
