@@ -1,0 +1,15 @@
+[package]
+name = "pusher"
+description = "Pusher pushes the Redstone data on-chain"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+worker = "0.4.1"
+serde = { version = "1.0", features = ["derive"] }
+hex = "0.4"
+solana-sdk = "1.18.23"
+solana-client = "1.18.23"

@@ -1,6 +1,7 @@
 [workspace]
 members = ["programs/*"]
 resolver = "2"
+exclude = ["pusher"]
 
 [profile.release]
 overflow-checks = true

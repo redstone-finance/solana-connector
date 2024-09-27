@@ -1,0 +1,9 @@
+name = "redstone-solana-worker"
+type = "rust"
+workers_dev = true
+
+[vars]
+SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
+
+[secrets]
+PRIVATE_KEY = ""
