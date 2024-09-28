@@ -14,7 +14,8 @@ Anchor IDL: `./target/idl/redstone_sol.json`
 
 ## Examples
 
-Check out the `./examples` directory for usage examples.
+Check out the `./pusher` directory for pushing data on-chain through
+a serverless service
 
 ## License
 
