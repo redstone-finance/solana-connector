@@ -17,8 +17,5 @@ RUN bun install --frozen-lockfile
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 8080
-
 # Run the app
 CMD ["bun", "run", "./src/entrypoint.ts"]
