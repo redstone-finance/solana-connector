@@ -1,3 +1,4 @@
+import bs58 from "bs58";
 import { requestRedstonePayload } from "@redstone-finance/sdk";
 import {
   Connection,
@@ -48,6 +49,38 @@ export async function sendTransaction(
   signer: Keypair,
 ): Promise<string> {
   return await sendAndConfirmTransaction(connection, transaction, [signer]);
+}
+
+export async function sendTransactionWithJito(
+  connection: Connection,
+  transaction: Transaction,
+  signer: Keypair,
+): Promise<string | undefined> {
+  transaction.recentBlockhash = (
+    await connection.getLatestBlockhash()
+  ).blockhash;
+  transaction.sign(signer);
+  try {
+    const res = await fetch(
+      "https://mainnet.block-engine.jito.wtf/api/v1/transactions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "sendTransaction",
+          params: [bs58.encode(transaction.serialize())],
+        }),
+      },
+    );
+    const data = await res.json();
+    return data?.result;
+  } catch (error) {
+    console.error("Error in transaction:", error);
+  }
 }
 
 async function makeInstructionData(feedId: string): Promise<Buffer> {

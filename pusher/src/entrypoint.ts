@@ -5,6 +5,7 @@ import {
   sendTransaction,
   getConnectionFromRpcUrl,
 } from "./";
+import { sendTransactionWithJito } from "./tx";
 
 const FEED_ID = "AVAX";
 
@@ -24,8 +25,12 @@ async function pushData() {
     console.log("Using signer:", signer.publicKey.toBase58());
     try {
       const transaction = await makeTransaction(signer, FEED_ID);
-      const signature = await sendTransaction(connection, transaction, signer);
-      console.log(`${Date.now()}: Transaction sent: ${signature}`);
+      const signature = await sendTransactionWithJito(
+        connection,
+        transaction,
+        signer,
+      );
+      console.log(`${Date.now()}: Transaction sent with Jito: ${signature}`);
     } catch (error) {
       console.error("Error in transaction:", error);
     }
