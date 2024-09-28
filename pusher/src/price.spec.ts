@@ -4,7 +4,7 @@ import { getPrice } from "./price";
 describe("getPrice", () => {
   it("should return the correct price for AVAX feed", async () => {
     const feedId = "AVAX";
-    const price = await getPrice(feedId, "testnet");
+    const price = await getPrice(feedId, "mainnet-beta");
 
     expect(price).to.be.an("object");
     expect(price).to.have.property("feedId", feedId);
