@@ -2,7 +2,6 @@ import { serve } from "bun";
 import {
   getSignerFromPrivateKey,
   makeTransaction,
-  sendTransaction,
   getConnectionFromRpcUrl,
 } from "./";
 import { sendTransactionWithJito } from "./tx";
