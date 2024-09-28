@@ -37,8 +37,10 @@ async function pushData() {
 // Schedule data push every 10 seconds
 setInterval(pushData, 10000);
 
+const port = parseInt(process.env.PORT || "8080", 10);
+
 serve({
-  port: 8080,
+  port,
   fetch(req) {
     const url = new URL(req.url);
 

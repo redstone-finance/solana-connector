@@ -1,0 +1,52 @@
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/$PROJECT_ID/redstone-pusher",
+        "--platform",
+        "linux/amd64",
+        ".",
+      ]
+
+  # Push the container image to Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/redstone-pusher"]
+
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "run"
+      - "deploy"
+      - "redstone-pusher"
+      - "--image"
+      - "gcr.io/$PROJECT_ID/redstone-pusher"
+      - "--region"
+      - "europe-central2"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--set-env-vars"
+      - "PRIVATE_KEY=${_PRIVATE_KEY},RPC_URL=${_RPC_URL}"
+
+  # Get the URL of the deployed Cloud Run service
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        CLOUD_RUN_URL=$(gcloud run services describe redstone-pusher \
+          --platform managed \
+          --region europe-central2 \
+          --format 'value(status.url)')
+        echo "$$CLOUD_RUN_URL" > _CLOUD_RUN_URL
+
+images:
+  - "gcr.io/$PROJECT_ID/redstone-pusher"
+
+substitutions:
+  _PRIVATE_KEY: ${_PRIVATE_KEY}
+  _RPC_URL: ${_RPC_URL}
