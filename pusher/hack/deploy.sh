@@ -19,8 +19,7 @@ fi
 # Set your Google Cloud project ID and region
 PROJECT_ID="piotrostr-resources"
 REGION="europe-central2"
-
-./push-image.sh
+IMAGE_NAME="gcr.io/$PROJECT_ID/redstone-pusher"
 
 # Deploy to Cloud Run
 gcloud run deploy redstone-pusher \

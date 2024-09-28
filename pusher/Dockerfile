@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package.json and bun.lockb
-COPY package.json package-lock.json ./
+COPY package.json bun.lockb ./
 
 # Install dependencies
 RUN bun install --frozen-lockfile

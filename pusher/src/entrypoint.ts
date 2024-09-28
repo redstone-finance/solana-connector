@@ -1,3 +1,4 @@
+import { serve } from "bun";
 import {
   getSignerFromPrivateKey,
   makeTransaction,
@@ -7,7 +8,7 @@ import {
 
 const FEED_ID = "AVAX";
 
-export async function entrypoint() {
+async function pushData() {
   const rpcUrl = process.env.RPC_URL;
   const privateKey = process.env.PRIVATE_KEY;
 
@@ -33,4 +34,24 @@ export async function entrypoint() {
   }
 }
 
-entrypoint();
+// Schedule data push every 10 seconds
+setInterval(pushData, 10000);
+
+serve({
+  port: 8080,
+  fetch(req) {
+    const url = new URL(req.url);
+
+    if (url.pathname === "/") {
+      return new Response("Service is running");
+    }
+
+    if (url.pathname === "/push") {
+      // Trigger a manual push
+      pushData();
+      return new Response("Data push triggered");
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
+});
