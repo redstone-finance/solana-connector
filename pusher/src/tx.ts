@@ -17,9 +17,30 @@ import {
 } from "./config.js";
 import { makeFeedIdBytes, makePriceSeed } from "./util.js";
 
+async function retry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 2,
+  initialBackoff: number = 100,
+  backoffFactor: number = 2
+): Promise<T> {
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error as Error;
+      if (attempt < maxRetries) {
+        const backoffTime = initialBackoff * Math.pow(backoffFactor, attempt);
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export async function makeTransaction(
   signer: Keypair,
-  feedId: string,
+  feedId: string
 ): Promise<Transaction> {
   const priceAccount = getPriceAccount(feedId);
   const keys = [
@@ -39,14 +60,14 @@ export async function makeTransaction(
       keys,
       programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
       data: instructionData,
-    }),
+    })
   );
 }
 
 export async function sendTransaction(
   connection: Connection,
   transaction: Transaction,
-  signer: Keypair,
+  signer: Keypair
 ): Promise<string> {
   return await sendAndConfirmTransaction(connection, transaction, [signer]);
 }
@@ -54,13 +75,14 @@ export async function sendTransaction(
 export async function sendTransactionWithJito(
   connection: Connection,
   transaction: Transaction,
-  signer: Keypair,
+  signer: Keypair
 ): Promise<string | undefined> {
   transaction.recentBlockhash = (
     await connection.getLatestBlockhash()
   ).blockhash;
   transaction.sign(signer);
-  try {
+
+  return await retry(async () => {
     const res = await fetch(
       "https://mainnet.block-engine.jito.wtf/api/v1/transactions",
       {
@@ -74,13 +96,17 @@ export async function sendTransactionWithJito(
           method: "sendTransaction",
           params: [bs58.encode(transaction.serialize())],
         }),
-      },
+      }
     );
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
     const data = await res.json();
+    if (data.error) {
+      throw new Error(`JSON-RPC error: ${JSON.stringify(data.error)}`);
+    }
     return data?.result;
-  } catch (error) {
-    console.error("Error in transaction:", error);
-  }
+  });
 }
 
 async function makeInstructionData(feedId: string): Promise<Buffer> {
@@ -103,7 +129,7 @@ async function makePayload(dataFeeds: string[]): Promise<Uint8Array> {
       dataServiceId: DATA_SERVICE_ID,
       uniqueSignersCount: UNIQUE_SIGNER_COUNT,
     },
-    "bytes",
+    "bytes"
   );
   return Uint8Array.from(JSON.parse(res));
 }
@@ -112,7 +138,7 @@ function getPriceAccount(feedId: string): PublicKey {
   const seeds = [makePriceSeed(), makeFeedIdBytes(feedId)];
   const [priceAccount] = PublicKey.findProgramAddressSync(
     seeds,
-    new PublicKey(REDSTONE_SOL_PROGRAM_ID),
+    new PublicKey(REDSTONE_SOL_PROGRAM_ID)
   );
   return priceAccount;
 }
