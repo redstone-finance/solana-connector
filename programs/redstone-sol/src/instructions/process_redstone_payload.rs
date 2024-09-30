@@ -5,6 +5,7 @@ use crate::redstone;
 use crate::state::*;
 use crate::util::*;
 use anchor_lang::prelude::*;
+use std::collections::HashMap;
 
 #[derive(Accounts)]
 #[instruction(feed_id: FeedId)]
@@ -75,22 +76,32 @@ pub fn process_redstone_payload(
         }
     }
 
+    let mut feed_values: HashMap<FeedId, Vec<u128>> = HashMap::new();
+
     for package in &payload.data_packages {
-        if let Some(data_point) = &package.data_points.first() {
+        for data_point in &package.data_points {
             if !config.feed_ids.contains(&data_point.feed_id) {
                 return Err(RedstoneError::UnsupportedFeedId.into());
             }
-            ctx.accounts.price_account.value = data_point.value;
-            ctx.accounts.price_account.timestamp = config.block_timestamp;
-            ctx.accounts.price_account.feed_id = data_point.feed_id;
-
-            msg!(
-                "Updated price for feed {}: {} at timestamp {}",
-                u256_to_string(data_point.feed_id),
-                ctx.accounts.price_account.value,
-                ctx.accounts.price_account.timestamp
-            );
+            feed_values
+                .entry(data_point.feed_id)
+                .or_default()
+                .push(data_point.value);
         }
+    }
+
+    for (feed_id, mut values) in feed_values {
+        let median_value = calculate_median(&mut values);
+        ctx.accounts.price_account.value = median_value;
+        ctx.accounts.price_account.timestamp = config.block_timestamp;
+        ctx.accounts.price_account.feed_id = feed_id;
+
+        msg!(
+            "Updated price for feed {}: {} at timestamp {}",
+            u256_to_string(feed_id),
+            ctx.accounts.price_account.value,
+            ctx.accounts.price_account.timestamp
+        );
     }
 
     Ok(())

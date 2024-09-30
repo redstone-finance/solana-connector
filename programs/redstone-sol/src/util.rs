@@ -54,3 +54,13 @@ pub fn vec_to_u64(vec: &[u8]) -> u64 {
 pub fn vec_to_u128(vec: &[u8]) -> u128 {
     vec.iter().fold(0u128, |acc, &b| (acc << 8) | b as u128)
 }
+
+pub fn calculate_median(values: &mut [u128]) -> u128 {
+    values.sort_unstable();
+    let len = values.len();
+    if len % 2 == 0 {
+        (values[len / 2 - 1] + values[len / 2]) / 2
+    } else {
+        values[len / 2]
+    }
+}
