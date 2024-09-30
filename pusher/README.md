@@ -72,5 +72,5 @@ npm run start -- \
 ```bash
 npm run start -- \
   --check-price AVAX \
-  --network mainnet
+  --network mainnet-beta
 ```
