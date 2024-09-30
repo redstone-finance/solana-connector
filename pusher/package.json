@@ -1,0 +1,27 @@
+{
+  "name": "redstone-pusher",
+  "version": "1.0.7",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "redstone-pusher": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.10",
+    "@types/chai": "^5.0.0",
+    "@types/node": "^22.7.4",
+    "chai": "^5.1.1",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@redstone-finance/sdk": "^0.6.2",
+    "@solana/web3.js": "^1.95.3",
+    "bs58": "^6.0.0",
+    "bun": "^1.1.29",
+    "commander": "^12.1.0"
+  }
+}
