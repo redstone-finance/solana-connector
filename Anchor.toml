@@ -3,15 +3,19 @@
 [features]
 resolution = true
 skip-lint = false
-upgradeable = true
-seeds = false
+
+[programs.testnet]
+redstone_sol = "5cKwbjiexA7SEBEKb1nEvkykuEWEJhKpJLYbYKTBCyXY"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Testnet"
+wallet = "./pusher/example-keypair.json"
+
+[workspace]
+members = ["programs/redstone-sol"]
 
 [scripts]
 test = "npm run test"

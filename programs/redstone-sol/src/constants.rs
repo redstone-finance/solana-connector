@@ -1,16 +1,5 @@
 use crate::SignerAddress;
 
-pub const UNSIGNED_METADATA_BYTE_SIZE_BS: usize = 3;
-pub const DATA_PACKAGES_COUNT_BS: usize = 2;
-pub const DATA_POINTS_COUNT_BS: usize = 3;
-pub const SIGNATURE_BS: usize = 65;
-pub const DATA_POINT_VALUE_BYTE_SIZE_BS: usize = 4;
-pub const DATA_FEED_ID_BS: usize = 32;
-pub const TIMESTAMP_BS: usize = 6;
-pub const MAX_TIMESTAMP_DELAY_MS: u64 = 15 * 60 * 1000; // 15 minutes in milliseconds
-pub const MAX_TIMESTAMP_AHEAD_MS: u64 = 3 * 60 * 1000; // 3 minutes in milliseconds
-pub const REDSTONE_MARKER_BS: usize = 9;
-pub const REDSTONE_MARKER: [u8; 9] = [0, 0, 2, 237, 87, 1, 30, 0, 0]; // 0x000002ed57011e0000
 pub const SIGNERS: [SignerAddress; 10] = [
     [
         0x10, 0x9B, 0x4A, 0x31, 0x8A, 0x4F, 0x5D, 0xDC, 0xBC, 0xA6, 0x34,
@@ -52,59 +41,4 @@ pub const SIGNERS: [SignerAddress; 10] = [
         0x57, 0x33, 0x1C, 0x48, 0xC0, 0xC6, 0xF2, 0x56, 0xF8, 0x99, 0xD1,
         0x18, 0xCB, 0x4D, 0x67, 0xFC, 0x75, 0xF0, 0x7B, 0xEE,
     ],
-];
-
-pub const FEED_IDS_STR: [&str; 52] = [
-    "AVAX",
-    "BAL",
-    "BAL_ggAVAX_AVAX",
-    "BAL_sAVAX_AVAX",
-    "BAL_yyAVAX_AVAX",
-    "BTC",
-    "CAI",
-    "CRV",
-    "DAI",
-    "ETH",
-    "EUROC",
-    "GLP",
-    "GMX",
-    "GM_AVAX_WAVAX",
-    "GM_AVAX_WAVAX_USDC",
-    "GM_BTC_BTCb",
-    "GM_BTC_BTCb_USDC",
-    "GM_ETH_WETHe",
-    "GM_ETH_WETHe_USDC",
-    "GM_SOL_SOL_USDC",
-    "IB01.L",
-    "JOE",
-    "LINK",
-    "PNG",
-    "PNG_AVAX_ETH_LP",
-    "PNG_AVAX_USDC_LP",
-    "PNG_AVAX_USDT_LP",
-    "PRIME",
-    "QI",
-    "SHLB_GMX-AVAX_B",
-    "SOL",
-    "TJ_AVAX_USDC_AUTO",
-    "USDC",
-    "USDT",
-    "WOMBAT_ggAVAX_AVAX_LP_AVAX",
-    "WOMBAT_ggAVAX_AVAX_LP_ggAVAX",
-    "WOMBAT_sAVAX_AVAX_LP_AVAX",
-    "WOMBAT_sAVAX_AVAX_LP_sAVAX",
-    "XAVA",
-    "YYAV3SA1",
-    "YY_AAVE_AVAX",
-    "YY_GLP",
-    "YY_PNG_AVAX_ETH_LP",
-    "YY_PNG_AVAX_USDC_LP",
-    "crvUSDBTCETH",
-    "ggAVAX",
-    "gmdAVAX",
-    "gmdBTC",
-    "gmdETH",
-    "gmdUSDC",
-    "sAVAX",
-    "yyAVAX",
 ];

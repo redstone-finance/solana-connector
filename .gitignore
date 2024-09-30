@@ -1,4 +1,4 @@
-example-keypair.json
+pusher/example-keypair.json
 debug/
 target/
 
@@ -13,3 +13,5 @@ target
 node_modules
 test-ledger
 .yarn
+.idea/
+**/dist/*

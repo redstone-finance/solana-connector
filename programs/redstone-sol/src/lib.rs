@@ -1,7 +1,5 @@
 pub mod constants;
-pub mod error;
 pub mod instructions;
-pub mod redstone;
 pub mod state;
 pub mod util;
 
@@ -9,7 +7,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-declare_id!("3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T");
+declare_id!("5cKwbjiexA7SEBEKb1nEvkykuEWEJhKpJLYbYKTBCyXY");
 
 #[program]
 pub mod redstone_sol {

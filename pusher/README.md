@@ -52,9 +52,9 @@ npm run start -- \
 
 ```bash
 npm run start -- \
-  --private-key $HOME/.config/solana/id.json \
-  --network mainnet-beta \
-  --feed-id AVAX # or BTC, ETH, etc., any feed from redstone avax prod service
+  --private-key ./example-keypair.json \
+  --network testnet \
+  --feed-id BTC # or BTC, ETH, etc., any feed from redstone avax prod service
 ```
 
 ### Check Price
@@ -63,7 +63,7 @@ npm run start -- \
 
 ```bash
 npm run start -- \
-  --check-price AVAX \
+  --check-price ETH \
   --network testnet
 ```
 
@@ -71,6 +71,6 @@ npm run start -- \
 
 ```bash
 npm run start -- \
-  --check-price AVAX \
+  --check-price BTC \
   --network mainnet-beta
 ```

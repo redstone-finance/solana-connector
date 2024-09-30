@@ -1,10 +1,11 @@
-use crate::constants::FEED_IDS_STR;
 use crate::constants::SIGNERS;
-use crate::error::RedstoneError;
-use crate::redstone;
 use crate::state::*;
-use crate::util::*;
+use crate::util::u256_from_slice;
 use anchor_lang::prelude::*;
+use redstone::{
+    core::{config::Config, processor::process_payload},
+    network::{as_str::AsHexStr, from_bytes_repr::FromBytesRepr},
+};
 
 #[derive(Accounts)]
 #[instruction(feed_id: FeedId)]
@@ -31,67 +32,27 @@ pub fn process_redstone_payload(
 ) -> Result<()> {
     // block_timestamp as milis
     let block_timestamp = Clock::get()?.unix_timestamp as u64 * 1000;
+    let feed_id_u256 =
+        redstone::network::specific::U256::from_bytes_repr(feed_id.to_vec());
     let config = Config {
         block_timestamp,
         signer_count_threshold: 3,
-        signers: SIGNERS,
-        feed_ids: FEED_IDS_STR
-            .iter()
-            .map(|&x| u256_from_slice(x.as_bytes()))
-            .collect::<Vec<FeedId>>()
-            .try_into()
-            .unwrap(),
+        signers: SIGNERS.map(|s| s.to_vec()).into(),
+        feed_ids: vec![feed_id_u256],
     };
 
-    if !config.feed_ids.contains(&feed_id) {
-        return Err(RedstoneError::UnsupportedFeedId.into());
-    }
+    let result = process_payload(config, payload);
 
-    redstone::verify_redstone_marker(&payload)?;
+    ctx.accounts.price_account.value = result.values[0].try_into().unwrap();
+    ctx.accounts.price_account.timestamp = result.min_timestamp;
+    ctx.accounts.price_account.feed_id = feed_id;
 
-    let mut payload = payload;
-    let payload = redstone::parse_raw_payload(&mut payload)?;
-
-    redstone::verify_data_packages(&payload, &config)?;
-
-    #[cfg(feature = "dev")]
-    {
-        msg!(
-            "Payload processed successfully: {}",
-            payload.data_packages.len()
-        );
-        for package in &payload.data_packages {
-            msg!(
-                "Package signer: 0x{}",
-                bytes_to_hex(&package.signer_address)
-            );
-            for data_point in &package.data_points {
-                msg!(
-                    "Data point: {} {}",
-                    u256_to_string(data_point.feed_id),
-                    data_point.value.to_string()
-                );
-            }
-        }
-    }
-
-    for package in &payload.data_packages {
-        if let Some(data_point) = &package.data_points.first() {
-            if !config.feed_ids.contains(&data_point.feed_id) {
-                return Err(RedstoneError::UnsupportedFeedId.into());
-            }
-            ctx.accounts.price_account.value = data_point.value;
-            ctx.accounts.price_account.timestamp = config.block_timestamp;
-            ctx.accounts.price_account.feed_id = data_point.feed_id;
-
-            msg!(
-                "Updated price for feed {}: {} at timestamp {}",
-                u256_to_string(data_point.feed_id),
-                ctx.accounts.price_account.value,
-                ctx.accounts.price_account.timestamp
-            );
-        }
-    }
+    msg!(
+        "Updated price for feed {}: {} at timestamp {}",
+        feed_id_u256.as_hex_str(),
+        ctx.accounts.price_account.value,
+        ctx.accounts.price_account.timestamp
+    );
 
     Ok(())
 }

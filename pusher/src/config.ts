@@ -6,7 +6,7 @@ import { readFile } from "fs/promises";
 export const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
 export const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
 export const REDSTONE_SOL_PROGRAM_ID =
-  "3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T";
+  "5cKwbjiexA7SEBEKb1nEvkykuEWEJhKpJLYbYKTBCyXY";
 export const DATA_SERVICE_ID = "redstone-avalanche-prod";
 export const UNIQUE_SIGNER_COUNT = 3;
 
