@@ -1,7 +1,8 @@
 # examples
 
 > [!NOTE]
-> The example uses the testnet cluster and program at `2tcbDvTs2LkKKx9xwizMHRBKxKgtWBihRnZoDnbxtc8k`
+> The example uses the testnet cluster and program at
+> `3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T`
 
 ## Requirements
 
@@ -74,3 +75,27 @@ npm run start -- \
   --check-price AVAX \
   --network mainnet-beta
 ```
+
+### Push data continously from Google Cloud Run
+
+> [!WARNING]
+> Don't use a key with more than 0.1-0.2 SOL, the key is stored as environment
+> variable by Cloud Run, in production setting it should be pulled from Google
+> Cloud Secret Manager on every trigger
+
+Set up `.env` as per `.env.example`:
+
+```txt
+PRIVATE_KEY=[base58-encoded-private-key]
+RPC_URL=[mainnet-rpc-url]
+```
+
+Update the `PROJECT_ID` in the `./hack/ci-cd.sh` script, ensure you have cloud
+build, cloud run GCP APIs enabled, then run
+
+```sh
+./hack/ci-cd.sh
+```
+
+The script parses the local env vars from `.env` and sets them in the Cloud Run
+service, Cloud Build runs the build and deploys a new revision
