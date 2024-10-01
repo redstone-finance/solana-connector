@@ -39,6 +39,7 @@ fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage> {
 
     let data_point_count = trim_data_point_count(payload);
     let value_size = trim_data_point_value_size(payload);
+    msg!("value_size: {}", value_size);
     let timestamp = trim_timestamp(payload);
     let size = data_point_count * (value_size + DATA_FEED_ID_BS)
         + DATA_POINT_VALUE_BYTE_SIZE_BS
@@ -116,7 +117,7 @@ fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     let feed_id = u256_from_slice(&feed_id);
 
     DataPoint {
-        value: vec_to_u128(&value),
+        value: u256_from_slice(&value),
         feed_id,
     }
 }

@@ -36,17 +36,16 @@ export const makePayload = async (dataPackagesIds: Array<string>) => {
 };
 
 export const deserializePriceData = (data: Buffer): PriceData => {
-  if (data.length !== 64) {
-    // 8 (discriminator) + 32 + 16 + 8 bytes
+  if (data.length !== 80) {
+    // 8 (discriminator) + 32 + 32 + 8 bytes
     throw new Error("Invalid data length for PriceData " + data.length);
   }
 
   const feedIdBuffer = data.subarray(8, 40);
   const feedId = feedIdBuffer.toString("utf8").replace(/\0+$/, "");
-  const valueLow = data.readBigUInt64LE(40);
-  const valueHigh = data.readBigUInt64LE(48);
-  const value = valueLow + (valueHigh << BigInt(64));
-  const timestamp = data.readBigUInt64LE(56);
+  const valueBuffer = data.subarray(40, 72);
+  const value = BigInt(`0x${valueBuffer.toString("hex")}`);
+  const timestamp = data.readBigUInt64LE(72);
 
   return {
     feedId: feedId,

@@ -65,7 +65,7 @@ pub fn process_redstone_payload(
         }
     }
 
-    let mut feed_values: HashMap<FeedId, Vec<u128>> = HashMap::new();
+    let mut feed_values: HashMap<FeedId, Vec<U256>> = HashMap::new();
 
     for package in &payload.data_packages {
         for data_point in &package.data_points {
@@ -88,7 +88,7 @@ pub fn process_redstone_payload(
         msg!(
             "Updated price for feed {}: {} at timestamp {}",
             u256_to_string(feed_id),
-            ctx.accounts.price_account.value,
+            u256_to_num_string(ctx.accounts.price_account.value),
             ctx.accounts.price_account.timestamp
         );
     }
