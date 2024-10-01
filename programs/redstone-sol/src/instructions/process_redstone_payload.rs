@@ -1,4 +1,3 @@
-use crate::constants::FEED_IDS_STR;
 use crate::constants::SIGNERS;
 use crate::error::RedstoneError;
 use crate::redstone;
@@ -36,17 +35,7 @@ pub fn process_redstone_payload(
         block_timestamp,
         signer_count_threshold: 3,
         signers: SIGNERS,
-        feed_ids: FEED_IDS_STR
-            .iter()
-            .map(|&x| u256_from_slice(x.as_bytes()))
-            .collect::<Vec<FeedId>>()
-            .try_into()
-            .unwrap(),
     };
-
-    if !config.feed_ids.contains(&feed_id) {
-        return Err(RedstoneError::UnsupportedFeedId.into());
-    }
 
     redstone::verify_redstone_marker(&payload)?;
 
@@ -80,7 +69,7 @@ pub fn process_redstone_payload(
 
     for package in &payload.data_packages {
         for data_point in &package.data_points {
-            if !config.feed_ids.contains(&data_point.feed_id) {
+            if feed_id != data_point.feed_id {
                 return Err(RedstoneError::UnsupportedFeedId.into());
             }
             feed_values
