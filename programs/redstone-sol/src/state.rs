@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::util::U256;
 
 pub type SignerAddress = [u8; 20];
-pub type FeedId = [u8; 32];
+pub type FeedId = U256;
 
 #[account]
 #[derive(Default)]
