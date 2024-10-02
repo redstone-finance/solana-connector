@@ -21,7 +21,7 @@ async function retry<T>(
   operation: () => Promise<T>,
   maxRetries: number = 2,
   initialBackoff: number = 100,
-  backoffFactor: number = 2
+  backoffFactor: number = 2,
 ): Promise<T> {
   let lastError: Error | undefined;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -40,12 +40,14 @@ async function retry<T>(
 
 export async function makeTransaction(
   signer: Keypair,
-  feedId: string
+  feedId: string,
 ): Promise<Transaction> {
   const priceAccount = getPriceAccount(feedId);
+  const configAccount = getConfigAccount();
   const keys = [
     { pubkey: signer.publicKey, isSigner: true, isWritable: true },
     { pubkey: priceAccount, isSigner: false, isWritable: true },
+    { pubkey: configAccount, isSigner: false, isWritable: false },
     {
       pubkey: new PublicKey(SYSTEM_PROGRAM_ID),
       isSigner: false,
@@ -60,14 +62,14 @@ export async function makeTransaction(
       keys,
       programId: new PublicKey(REDSTONE_SOL_PROGRAM_ID),
       data: instructionData,
-    })
+    }),
   );
 }
 
 export async function sendTransaction(
   connection: Connection,
   transaction: Transaction,
-  signer: Keypair
+  signer: Keypair,
 ): Promise<string> {
   return await sendAndConfirmTransaction(connection, transaction, [signer]);
 }
@@ -75,7 +77,7 @@ export async function sendTransaction(
 export async function sendTransactionWithJito(
   connection: Connection,
   transaction: Transaction,
-  signer: Keypair
+  signer: Keypair,
 ): Promise<string | undefined> {
   transaction.recentBlockhash = (
     await connection.getLatestBlockhash()
@@ -96,7 +98,7 @@ export async function sendTransactionWithJito(
           method: "sendTransaction",
           params: [bs58.encode(transaction.serialize())],
         }),
-      }
+      },
     );
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
@@ -129,7 +131,7 @@ async function makePayload(dataFeeds: string[]): Promise<Uint8Array> {
       dataServiceId: DATA_SERVICE_ID,
       uniqueSignersCount: UNIQUE_SIGNER_COUNT,
     },
-    "bytes"
+    "bytes",
   );
   return Uint8Array.from(JSON.parse(res));
 }
@@ -138,7 +140,15 @@ function getPriceAccount(feedId: string): PublicKey {
   const seeds = [makePriceSeed(), makeFeedIdBytes(feedId)];
   const [priceAccount] = PublicKey.findProgramAddressSync(
     seeds,
-    new PublicKey(REDSTONE_SOL_PROGRAM_ID)
+    new PublicKey(REDSTONE_SOL_PROGRAM_ID),
   );
   return priceAccount;
+}
+
+function getConfigAccount(): PublicKey {
+  const [configAccount] = PublicKey.findProgramAddressSync(
+    [Buffer.from("config")],
+    new PublicKey(REDSTONE_SOL_PROGRAM_ID),
+  );
+  return configAccount;
 }
