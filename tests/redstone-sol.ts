@@ -9,6 +9,7 @@ import {
   makeFeedIdBytes,
   deserializePriceData,
 } from "./util";
+import { SIGNERS } from "../migrations/signers";
 
 describe("redstone-sol", () => {
   const provider = anchor.AnchorProvider.env();
@@ -73,6 +74,10 @@ describe("redstone-sol", () => {
 
   let pdas = {};
 
+  let configAccount: anchor.web3.PublicKey;
+
+  const systemProgram = anchor.web3.SystemProgram.programId;
+
   before(async () => {
     for (const feedId of feedIds) {
       pdas[feedId] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -80,6 +85,29 @@ describe("redstone-sol", () => {
         program.programId
       )[0];
     }
+
+    configAccount = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("config")],
+      program.programId
+    )[0];
+  });
+
+  it("initializes correctly", async () => {
+    await program.methods
+      .initialize(
+        SIGNERS,
+        3, // signer_count_threshold
+        new anchor.BN(15 * 60 * 1000), // max_timestamp_delay_ms (15 minutes)
+        new anchor.BN(3 * 60 * 1000) // max_timestamp_ahead_ms (3 minutes)
+      )
+      .accountsStrict({
+        owner: anchor.getProvider().publicKey,
+        systemProgram,
+        configAccount,
+      })
+      .rpc();
+
+    console.log("Config initialized at:", configAccount.toString());
   });
 
   async function testFeedIdPush(feedId: string) {
@@ -92,7 +120,8 @@ describe("redstone-sol", () => {
         .accountsStrict({
           user: provider.wallet.publicKey,
           priceAccount,
-          systemProgram: anchor.web3.SystemProgram.programId,
+          configAccount,
+          systemProgram,
         })
         .rpc({ skipPreflight: true });
 
@@ -110,4 +139,88 @@ describe("redstone-sol", () => {
   }
 
   feedIds.forEach(testFeedIdPush);
+
+  describe("Config updates", () => {
+    it("Owner can update the config", async () => {
+      const newSigners = SIGNERS.slice(0, 5); // Use first 5 signers
+      const newThreshold = 2;
+      const newMaxDelay = new anchor.BN(20 * 60 * 1000); // 20 minutes
+      const newMaxAhead = new anchor.BN(5 * 60 * 1000); // 5 minutes
+
+      await program.methods
+        .updateConfig(newSigners, newThreshold, newMaxDelay, newMaxAhead)
+        .accountsStrict({
+          owner: provider.wallet.publicKey,
+          configAccount,
+        })
+        .rpc();
+
+      const updatedConfig = await program.account.configAccount.fetch(
+        configAccount
+      );
+
+      expect(updatedConfig.signers).to.deep.equal(newSigners);
+      expect(updatedConfig.signerCountThreshold).to.equal(newThreshold);
+      expect(updatedConfig.maxTimestampDelayMs.toString()).to.equal(
+        newMaxDelay.toString()
+      );
+      expect(updatedConfig.maxTimestampAheadMs.toString()).to.equal(
+        newMaxAhead.toString()
+      );
+    });
+
+    it("Non-owner cannot update the config", async () => {
+      const nonOwnerWallet = anchor.web3.Keypair.generate();
+      await provider.connection.requestAirdrop(
+        nonOwnerWallet.publicKey,
+        1000000000
+      );
+
+      try {
+        await program.methods
+          .updateConfig(null, 4, null, null)
+          .accountsStrict({
+            owner: nonOwnerWallet.publicKey,
+            configAccount,
+          })
+          .signers([nonOwnerWallet])
+          .rpc();
+        expect.fail("Expected error but transaction succeeded");
+      } catch (error) {
+        expect(error.toString()).to.include(
+          "A has one constraint was violated"
+        );
+      }
+    });
+
+    it("Partial update of config is possible", async () => {
+      const originalConfig = await program.account.configAccount.fetch(
+        configAccount
+      );
+      const newMaxDelay = new anchor.BN(25 * 60 * 1000); // 25 minutes
+
+      await program.methods
+        .updateConfig(null, null, newMaxDelay, null)
+        .accountsStrict({
+          owner: provider.wallet.publicKey,
+          configAccount,
+        })
+        .rpc();
+
+      const updatedConfig = await program.account.configAccount.fetch(
+        configAccount
+      );
+
+      expect(updatedConfig.signers).to.deep.equal(originalConfig.signers);
+      expect(updatedConfig.signerCountThreshold).to.equal(
+        originalConfig.signerCountThreshold
+      );
+      expect(updatedConfig.maxTimestampDelayMs.toNumber()).to.equal(
+        newMaxDelay.toNumber()
+      );
+      expect(updatedConfig.maxTimestampAheadMs.toNumber()).to.equal(
+        originalConfig.maxTimestampAheadMs.toNumber()
+      );
+    });
+  });
 });

@@ -13,6 +13,15 @@ pub struct PriceData {
     pub timestamp: u64,
 }
 
+#[account]
+pub struct ConfigAccount {
+    pub owner: Pubkey,
+    pub signer_count_threshold: u8,
+    pub signers: Vec<SignerAddress>,
+    pub max_timestamp_delay_ms: u64,
+    pub max_timestamp_ahead_ms: u64,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct DataPoint {
     pub feed_id: FeedId,
@@ -31,8 +40,7 @@ pub struct Payload {
     pub data_packages: Vec<DataPackage>,
 }
 
-pub struct Config {
-    pub signer_count_threshold: u8,
+pub struct Config<'a> {
     pub block_timestamp: u64,
-    pub signers: [SignerAddress; 10],
+    pub config_account: &'a ConfigAccount,
 }

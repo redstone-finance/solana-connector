@@ -1,12 +1,39 @@
-// Migrations are an early feature. Currently, they're nothing more than this
-// single deploy script that's invoked from the CLI, injecting a provider
-// configured from the workspace's Anchor.toml.
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { RedstoneSol } from "../target/types/redstone_sol";
+import { SIGNERS } from "./signers";
 
-const anchor = require("@coral-xyz/anchor");
+async function main() {
+  // Local env by default, ammend Anchor.toml for prod
+  anchor.setProvider(anchor.AnchorProvider.env());
 
-module.exports = async function (provider) {
-  // Configure client to use the provider.
-  anchor.setProvider(provider);
+  const program = anchor.workspace.RedstoneSol as Program<RedstoneSol>;
 
-  // Add your deploy script here.
-};
+  const [configAccount, _] = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("config")],
+    program.programId
+  );
+
+  await program.methods
+    .initialize(
+      SIGNERS,
+      3, // signer_count_threshold
+      new anchor.BN(15 * 60 * 1000), // max_timestamp_delay_ms (15 minutes)
+      new anchor.BN(3 * 60 * 1000) // max_timestamp_ahead_ms (3 minutes)
+    )
+    .accountsStrict({
+      owner: anchor.getProvider().publicKey,
+      systemProgram: anchor.web3.SystemProgram.programId,
+      configAccount,
+    })
+    .rpc();
+
+  console.log("Config initialized at:", configAccount.toString());
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

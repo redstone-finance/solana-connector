@@ -1,4 +1,3 @@
-use crate::constants::SIGNERS;
 use crate::error::RedstoneError;
 use crate::redstone;
 use crate::state::*;
@@ -21,6 +20,7 @@ pub struct ProcessPayload<'info> {
         constraint = price_account.to_account_info().owner == __program_id
     )]
     pub price_account: Account<'info, PriceData>,
+    pub config_account: Account<'info, ConfigAccount>,
     pub system_program: Program<'info, System>,
 }
 
@@ -30,11 +30,9 @@ pub fn process_redstone_payload(
     payload: Vec<u8>,
 ) -> Result<()> {
     // block_timestamp as milis
-    let block_timestamp = Clock::get()?.unix_timestamp as u64 * 1000;
     let config = Config {
-        block_timestamp,
-        signer_count_threshold: 3,
-        signers: SIGNERS,
+        block_timestamp: Clock::get()?.unix_timestamp as u64 * 1000,
+        config_account: &ctx.accounts.config_account,
     };
 
     redstone::verify_redstone_marker(&payload)?;
