@@ -71,11 +71,11 @@ pub fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload> {
 pub fn trim_metadata(payload: &mut Vec<u8>) -> usize {
     let unsigned_metadata_size =
         payload.trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS);
-    let unsigned_metadata_size = vec_to_usize(&unsigned_metadata_size);
+    let unsigned_metadata_size = usize::from_bytes(&unsigned_metadata_size);
     let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
 
     let package_count = payload.trim_end(DATA_PACKAGES_COUNT_BS);
-    vec_to_usize(&package_count)
+    usize::from_bytes(&package_count)
 }
 
 pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> [u8; 9] {
@@ -85,17 +85,17 @@ pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> [u8; 9] {
 
 pub fn trim_data_point_count(payload: &mut Vec<u8>) -> usize {
     let data_point_count = payload.trim_end(DATA_POINTS_COUNT_BS);
-    vec_to_usize(&data_point_count)
+    usize::from_bytes(&data_point_count)
 }
 
 pub fn trim_data_point_value_size(payload: &mut Vec<u8>) -> usize {
     let value_size = payload.trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS);
-    vec_to_usize(&value_size)
+    usize::from_bytes(&value_size)
 }
 
 pub fn trim_timestamp(payload: &mut Vec<u8>) -> u64 {
     let timestamp = payload.trim_end(TIMESTAMP_BS);
-    vec_to_u64(&timestamp)
+    u64::from_bytes(&timestamp)
 }
 
 pub fn parse_data_points(
@@ -116,10 +116,10 @@ pub fn parse_data_points(
 fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     let value = payload.trim_end(value_size);
     let feed_id = payload.trim_end(DATA_FEED_ID_BS);
-    let feed_id = u256_from_slice(&feed_id);
+    let feed_id = U256::from_bytes(&feed_id);
 
     DataPoint {
-        value: u256_from_slice(&value),
+        value: U256::from_bytes(&value),
         feed_id,
     }
 }

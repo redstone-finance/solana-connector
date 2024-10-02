@@ -15,7 +15,10 @@ pub struct ProcessPayload<'info> {
         init_if_needed,
         payer = user,
         space = 8 + std::mem::size_of::<PriceData>(),
-        seeds = [&u256_from_slice("price".as_bytes()), &u256_from_slice(feed_id.as_slice())],
+        seeds = [
+            &U256::from_bytes("price".as_bytes()),
+            &U256::from_bytes(feed_id.as_slice()),
+        ],
         bump,
         constraint = price_account.to_account_info().owner == __program_id
     )]

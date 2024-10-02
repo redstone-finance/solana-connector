@@ -44,23 +44,35 @@ pub fn bytes_to_hex(bytes: &[u8]) -> String {
     )
 }
 
-pub fn u256_from_slice(bytes: &[u8]) -> U256 {
-    let mut array = [0u8; 32];
-    let len = if bytes.len() > 32 { 32 } else { bytes.len() };
-    array[..len].copy_from_slice(&bytes[..len]);
-    array
+pub trait FromBytesRepr<T: Sized>: Sized {
+    fn from_bytes(bytes: T) -> Self;
 }
 
-pub fn vec_to_usize(vec: &[u8]) -> usize {
-    vec.iter().fold(0usize, |acc, &b| (acc << 8) | b as usize)
+impl FromBytesRepr<&[u8]> for U256 {
+    fn from_bytes(bytes: &[u8]) -> Self {
+        let mut array = [0u8; 32];
+        let len = bytes.len().min(32);
+        array[..len].copy_from_slice(&bytes[..len]);
+        array
+    }
 }
 
-pub fn vec_to_u64(vec: &[u8]) -> u64 {
-    vec.iter().fold(0u64, |acc, &b| (acc << 8) | b as u64)
+impl FromBytesRepr<&[u8]> for usize {
+    fn from_bytes(bytes: &[u8]) -> Self {
+        bytes.iter().fold(0usize, |acc, &b| (acc << 8) | b as usize)
+    }
 }
 
-pub fn vec_to_u128(vec: &[u8]) -> u128 {
-    vec.iter().fold(0u128, |acc, &b| (acc << 8) | b as u128)
+impl FromBytesRepr<&[u8]> for u64 {
+    fn from_bytes(bytes: &[u8]) -> Self {
+        bytes.iter().fold(0u64, |acc, &b| (acc << 8) | b as u64)
+    }
+}
+
+impl FromBytesRepr<&[u8]> for u128 {
+    fn from_bytes(bytes: &[u8]) -> Self {
+        bytes.iter().fold(0u128, |acc, &b| (acc << 8) | b as u128)
+    }
 }
 
 pub fn calculate_median(values: &mut [U256]) -> U256 {
