@@ -1,4 +1,5 @@
 pub type U256 = [u8; 32];
+pub const U256_MAX: U256 = [0xFF; 32];
 
 pub trait Trim<T>
 where
@@ -104,10 +105,18 @@ fn add_u256(a: &U256, b: &U256) -> U256 {
         carry = sum >> 8;
     }
 
-    result
+    if carry > 0 {
+        U256_MAX
+    } else {
+        result
+    }
 }
 
 fn divide_u256_by_2(a: &U256) -> U256 {
+    if a == &U256_MAX {
+        return U256_MAX;
+    }
+
     let mut result = [0u8; 32];
     let mut carry = 0u8;
 
@@ -118,4 +127,17 @@ fn divide_u256_by_2(a: &U256) -> U256 {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_median_with_max_values() {
+        let mut values = vec![U256_MAX; 100];
+        let result = calculate_median(&mut values);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), U256_MAX);
+    }
 }
