@@ -78,7 +78,12 @@ pub fn process_redstone_payload(
     }
 
     let median_value = calculate_median(&mut values);
-    ctx.accounts.price_account.value = median_value;
+    if let Some(median_value) = median_value {
+        ctx.accounts.price_account.value = median_value;
+    } else {
+        return Err(RedstoneError::MedianCalculationError.into());
+    }
+
     ctx.accounts.price_account.timestamp = config.block_timestamp;
     ctx.accounts.price_account.feed_id = feed_id;
 

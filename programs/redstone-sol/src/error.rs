@@ -34,4 +34,7 @@ pub enum RedstoneError {
 
     #[msg("Price account missing")]
     MissingPriceAccount,
+
+    #[msg("Failed to calculate median")]
+    MedianCalculationError,
 }

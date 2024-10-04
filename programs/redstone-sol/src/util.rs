@@ -75,9 +75,9 @@ impl FromBytesRepr<&[u8]> for u128 {
     }
 }
 
-pub fn calculate_median(values: &mut [U256]) -> U256 {
+pub fn calculate_median(values: &mut [U256]) -> Option<U256> {
     if values.is_empty() {
-        return [0u8; 32];
+        return None;
     }
 
     values.sort_unstable();
@@ -88,9 +88,9 @@ pub fn calculate_median(values: &mut [U256]) -> U256 {
         let left = &values[mid - 1];
         let right = &values[mid];
         let sum = add_u256(left, right);
-        divide_u256_by_2(&sum)
+        Some(divide_u256_by_2(&sum))
     } else {
-        values[len / 2]
+        Some(values[len / 2])
     }
 }
 
