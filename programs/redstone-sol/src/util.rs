@@ -77,22 +77,38 @@ impl FromBytesRepr<&[u8]> for u128 {
 }
 
 pub fn calculate_median(values: &mut [U256]) -> Option<U256> {
-    if values.is_empty() {
-        return None;
-    }
+    match values.len() {
+        0 => None,
+        1 => Some(values[0]),
+        2 => Some(avg_u256(&values[0], &values[1])),
+        3 => {
+            let (a, b, c) = (&values[0], &values[1], &values[2]);
+            if (b >= a && b <= c) || (b >= c && b <= a) {
+                Some(*b)
+            } else if (a >= b && a <= c) || (a >= c && a <= b) {
+                Some(*a)
+            } else {
+                Some(*c)
+            }
+        }
+        _ => {
+            values.sort_unstable();
+            let len = values.len();
 
-    values.sort_unstable();
-    let len = values.len();
-
-    if len % 2 == 0 {
-        let mid = len / 2;
-        let left = &values[mid - 1];
-        let right = &values[mid];
-        let sum = add_u256(left, right);
-        Some(divide_u256_by_2(&sum))
-    } else {
-        Some(values[len / 2])
+            if len % 2 == 0 {
+                let mid = len / 2;
+                let left = &values[mid - 1];
+                let right = &values[mid];
+                Some(avg_u256(left, right))
+            } else {
+                Some(values[len / 2])
+            }
+        }
     }
+}
+
+fn avg_u256(a: &U256, b: &U256) -> U256 {
+    divide_u256_by_2(&add_u256(a, b))
 }
 
 fn add_u256(a: &U256, b: &U256) -> U256 {
