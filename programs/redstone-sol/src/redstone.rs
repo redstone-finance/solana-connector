@@ -115,11 +115,9 @@ pub fn parse_data_points(
 fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     let value = payload.trim_end(value_size);
     let feed_id = payload.trim_end(DATA_FEED_ID_BS);
-    let feed_id = U256::from_bytes(&feed_id);
-
     DataPoint {
-        value: U256::from_bytes(&value),
-        feed_id,
+        value: value.try_into().unwrap(),
+        feed_id: feed_id.try_into().unwrap(),
     }
 }
 
@@ -198,8 +196,6 @@ pub fn verify_signer_count(
         HashSet::from_iter(signers.iter().copied());
     let mut count: u8 = 0;
     for package in data_packages {
-        #[cfg(feature = "dev")]
-        msg!("Package signer: {:?}", package.signer_address);
         if unique_signers.contains(&package.signer_address) {
             count += 1;
         }

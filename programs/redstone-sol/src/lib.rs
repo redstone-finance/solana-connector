@@ -23,7 +23,7 @@ pub mod redstone_sol {
         msg!(
             "Processing redstone payload of size {} for {}",
             payload.len(),
-            util::u256_to_string(feed_id)
+            zkp_u256::U256::from_bytes_be(&feed_id).to_string()
         );
         instructions::process_redstone_payload(ctx, feed_id, payload)
     }

@@ -244,7 +244,7 @@ dependencies = [
  "ark-std",
  "derivative",
  "hashbrown 0.13.2",
- "itertools",
+ "itertools 0.10.5",
  "num-traits",
  "zeroize",
 ]
@@ -261,7 +261,7 @@ dependencies = [
  "ark-std",
  "derivative",
  "digest 0.10.7",
- "itertools",
+ "itertools 0.10.5",
  "num-bigint",
  "num-traits",
  "paste",
@@ -851,6 +851,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
 name = "hmac"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -895,6 +901,15 @@ checksum = "68b900aa2f7301e21c36462b170ee99994de34dff39a4a6a528e80e7376d07e5"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.5",
+]
+
+[[package]]
+name = "itertools"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
+dependencies = [
+ "either",
 ]
 
 [[package]]
@@ -1052,6 +1067,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "no-std-compat"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b5bf3e710f89f297c0a38b8a0fca4c6473782e057aa831440e3fa9a129ba2fc"
+
+[[package]]
 name = "num-bigint"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1191,6 +1212,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-hack"
+version = "0.5.20+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1322,6 +1349,8 @@ name = "redstone-sol"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "rand 0.8.5",
+ "zkp-u256",
 ]
 
 [[package]]
@@ -1560,7 +1589,7 @@ dependencies = [
  "console_log",
  "curve25519-dalek",
  "getrandom 0.2.15",
- "itertools",
+ "itertools 0.10.5",
  "js-sys",
  "lazy_static",
  "libc",
@@ -1962,4 +1991,50 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.77",
+]
+
+[[package]]
+name = "zkp-macros-decl"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3993801da712ae2ed9b56b1c7d0f32f1a082a3342835dee6bd0b44f00116a54"
+dependencies = [
+ "proc-macro-hack",
+ "zkp-macros-impl",
+]
+
+[[package]]
+name = "zkp-macros-impl"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad7d6e46961a3c9c8a0789ed52445430fbf8d210260c1d0c803f463668cef4bd"
+dependencies = [
+ "proc-macro-hack",
+ "proc-macro2",
+ "zkp-macros-lib",
+]
+
+[[package]]
+name = "zkp-macros-lib"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab79250888afef50bd7b18427aa50cd48faca9f54f71013bd77c66cf6b558533"
+dependencies = [
+ "hex",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "zkp-u256"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f67c45ee669b94e4e2f95aa39701e007bd299ba36db07a7991eff6e0f4d1ec0b"
+dependencies = [
+ "crunchy",
+ "hex",
+ "itertools 0.8.2",
+ "no-std-compat",
+ "zkp-macros-decl",
 ]

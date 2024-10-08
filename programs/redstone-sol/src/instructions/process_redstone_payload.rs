@@ -3,6 +3,13 @@ use crate::redstone;
 use crate::state::*;
 use crate::util::*;
 use anchor_lang::prelude::*;
+use zkp_u256::U256;
+
+fn make_price_seed() -> [u8; 32] {
+    let mut seed = [0u8; 32];
+    seed[0..5].copy_from_slice(b"price");
+    seed
+}
 
 #[derive(Accounts)]
 #[instruction(feed_id: FeedId)]
@@ -15,8 +22,8 @@ pub struct ProcessPayload<'info> {
         payer = user,
         space = 8 + std::mem::size_of::<PriceData>(),
         seeds = [
-            &U256::from_bytes("price".as_bytes()),
-            &U256::from_bytes(feed_id.as_slice()),
+            &make_price_seed(),
+            &feed_id
         ],
         bump,
         constraint = price_account.to_account_info().owner == __program_id
@@ -58,8 +65,8 @@ pub fn process_redstone_payload(
             for data_point in &package.data_points {
                 msg!(
                     "Data point: {} {}",
-                    u256_to_string(data_point.feed_id),
-                    data_point.value.to_string()
+                    u256_to_string(&data_point.feed_id),
+                    u256_to_num_string(&data_point.value),
                 );
             }
         }
@@ -72,14 +79,13 @@ pub fn process_redstone_payload(
             if feed_id != data_point.feed_id {
                 return Err(RedstoneError::UnsupportedFeedId.into());
             }
-            values.push(data_point.value);
-            msg!("timestamp: {}", package.timestamp);
+            values.push(U256::from_bytes_be(&data_point.value));
         }
     }
 
-    let median_value = calculate_median(&mut values);
-    if let Some(median_value) = median_value {
-        ctx.accounts.price_account.value = median_value;
+    let median_value = median(&values);
+    if let Some(median_value) = &median_value {
+        ctx.accounts.price_account.value = median_value.to_bytes_be();
     } else {
         return Err(RedstoneError::MedianCalculationError.into());
     }
@@ -88,10 +94,10 @@ pub fn process_redstone_payload(
     ctx.accounts.price_account.feed_id = feed_id;
 
     msg!(
-        "Updated price for feed {}: {} at timestamp {}",
-        u256_to_string(feed_id),
-        u256_to_num_string(ctx.accounts.price_account.value),
-        ctx.accounts.price_account.timestamp
+        "{} {}: {}",
+        ctx.accounts.price_account.timestamp,
+        u256_to_string(&feed_id),
+        u256_to_num_string(&ctx.accounts.price_account.value)
     );
 
     Ok(())
