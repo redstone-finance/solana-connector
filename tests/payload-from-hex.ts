@@ -11,7 +11,11 @@ import {
 } from "./util";
 import { SIGNERS } from "../migrations/signers";
 
-describe.only("redstone-sol", () => {
+/**
+ * the cases below are for debugging mainly, the real e2e runs through all of the
+ * possible feed IDs and can be found in `redstone-sol.ts` test file
+ */
+describe.skip("redstone-sol", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
