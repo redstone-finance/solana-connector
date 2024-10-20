@@ -209,3 +209,30 @@ pub fn verify_signer_count(
 pub fn keccak256(data: &[u8]) -> [u8; 32] {
     anchor_lang::solana_program::keccak::hash(data).to_bytes()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_recover_address() {
+        let signature = [
+            62, 70, 170, 189, 206, 18, 147, 212, 185, 107, 170, 67, 23, 8,
+            191, 160, 165, 172, 65, 237, 78, 237, 132, 1, 251, 9, 11, 217,
+            135, 193, 97, 192, 9, 179, 221, 33, 49, 97, 126, 103, 59, 54, 25,
+            253, 28, 26, 68, 198, 62, 38, 239, 210, 227, 184, 56, 5, 92, 52,
+            13, 37, 49, 219, 63, 253, 28,
+        ];
+
+        let message = [
+            66, 65, 76, 95, 115, 65, 86, 65, 88, 95, 65, 86, 65, 88, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            172, 164, 188, 52, 1, 146, 166, 216, 247, 144, 0, 0, 0, 32, 0, 0,
+            1,
+        ];
+
+        let address = super::recover_address(&message, &signature).unwrap();
+        println!("{:?}", address);
+        SIGNERS.iter().find(|&x| *x == address).unwrap();
+    }
+}
