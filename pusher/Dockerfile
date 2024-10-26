@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8080
 
 # Run the app
-CMD ["bun", "run", "./src/entrypoint.ts"]
+CMD ["bun", "run", "./index.ts", "service", "--port", "8080"]
