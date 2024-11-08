@@ -7,7 +7,7 @@ export const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
 export const METHOD_DISCRIMINATOR = [49, 96, 127, 141, 118, 203, 237, 178];
 export const REDSTONE_SOL_PROGRAM_ID =
   "3oHtb7BCqjqhZt8LyqSAZRAubbrYy8xvDRaYoRghHB1T";
-export const DATA_SERVICE_ID = "redstone-avalanche-prod";
+export const DATA_SERVICE_ID = "redstone-primary-prod";
 export const UNIQUE_SIGNER_COUNT = 3;
 
 export function setupProgram(): Command {
@@ -16,7 +16,7 @@ export function setupProgram(): Command {
     .option(
       "-n, --network <network>",
       "Network to use (testnet or mainnet-beta)",
-      "testnet",
+      "testnet"
     )
     .option("-f, --feed-id <id>", "Feed ID to use", "AVAX")
     .option("-c, --check-price <id>", "Check price for a given feed ID")
@@ -35,7 +35,7 @@ export async function getConnection(network: string): Promise<Connection> {
 }
 
 export async function getConnectionFromRpcUrl(
-  rpcUrl: string,
+  rpcUrl: string
 ): Promise<Connection> {
   const connection = new Connection(rpcUrl, "confirmed");
   console.log(`Connected to ${rpcUrl}, slot: ${await connection.getSlot()}`);
@@ -46,8 +46,8 @@ export async function getSigner(privateKeyPath: string): Promise<Keypair> {
   return Keypair.fromSeed(
     Uint8Array.from(JSON.parse(await readFile(privateKeyPath, "utf-8"))).slice(
       0,
-      32,
-    ),
+      32
+    )
   );
 }
 

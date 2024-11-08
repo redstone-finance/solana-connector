@@ -9,7 +9,7 @@ import {
   makeFeedIdBytes,
   deserializePriceData,
 } from "./util";
-import { SIGNERS } from "../migrations/signers";
+import { PRIMARY_SIGNERS } from "../migrations/signers";
 
 describe("redstone-sol", () => {
   const provider = anchor.AnchorProvider.env();
@@ -19,57 +19,16 @@ describe("redstone-sol", () => {
 
   const feedIds = [
     "AVAX",
-    "BAL",
-    "BAL_ggAVAX_AVAX",
-    "BAL_sAVAX_AVAX",
-    "BAL_yyAVAX_AVAX",
     "BTC",
-    "CAI",
     "CRV",
     "DAI",
     "ETH",
     "EUROC",
-    "GLP",
-    "GMX",
-    "GM_AVAX_WAVAX",
-    "GM_AVAX_WAVAX_USDC",
-    "GM_BTC_BTCb",
-    "GM_BTC_BTCb_USDC",
-    "GM_ETH_WETHe",
-    "GM_ETH_WETHe_USDC",
-    "GM_SOL_SOL_USDC",
-    "IB01.L",
-    "JOE",
     "LINK",
-    "PNG",
-    "PNG_AVAX_ETH_LP",
-    "PNG_AVAX_USDC_LP",
-    "PNG_AVAX_USDT_LP",
-    "PRIME",
-    "QI",
-    "SHLB_GMX-AVAX_B",
     "SOL",
-    "TJ_AVAX_USDC_AUTO",
     "USDC",
     "USDT",
-    "WOMBAT_ggAVAX_AVAX_LP_AVAX",
-    "WOMBAT_ggAVAX_AVAX_LP_ggAVAX",
-    "WOMBAT_sAVAX_AVAX_LP_AVAX",
-    "WOMBAT_sAVAX_AVAX_LP_sAVAX",
-    "XAVA",
-    "YYAV3SA1",
-    "YY_AAVE_AVAX",
-    "YY_GLP",
-    "YY_PNG_AVAX_ETH_LP",
-    "YY_PNG_AVAX_USDC_LP",
-    "crvUSDBTCETH",
-    "ggAVAX",
-    "gmdAVAX",
-    "gmdBTC",
-    "gmdETH",
-    "gmdUSDC",
-    "sAVAX",
-    "yyAVAX",
+    "EUR",
   ];
 
   let pdas = {};
@@ -95,7 +54,7 @@ describe("redstone-sol", () => {
   it("initializes correctly", async () => {
     await program.methods
       .initialize(
-        SIGNERS,
+        PRIMARY_SIGNERS,
         3, // signer_count_threshold
         new anchor.BN(15 * 60 * 1000), // max_timestamp_delay_ms (15 minutes)
         new anchor.BN(3 * 60 * 1000) // max_timestamp_ahead_ms (3 minutes)
@@ -138,11 +97,12 @@ describe("redstone-sol", () => {
     });
   }
 
+  // feedIds.forEach(testFeedIdPush);
   feedIds.forEach(testFeedIdPush);
 
   describe("Config updates", () => {
     it("Owner can update the config", async () => {
-      const newSigners = SIGNERS.slice(0, 5); // Use first 5 signers
+      const newSigners = PRIMARY_SIGNERS.slice(0, 3);
       const newThreshold = 2;
       const newMaxDelay = new anchor.BN(20 * 60 * 1000); // 20 minutes
       const newMaxAhead = new anchor.BN(5 * 60 * 1000); // 5 minutes
