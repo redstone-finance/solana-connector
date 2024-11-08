@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { RedstoneSol } from "../target/types/redstone_sol";
-import { SIGNERS_PROD } from "./signers";
+import { PRIMARY_SIGNERS } from "./signers";
 
 async function main() {
   // Local env by default, ammend Anchor.toml for prod
@@ -16,8 +16,8 @@ async function main() {
 
   await program.methods
     .initialize(
-      SIGNERS_PROD,
-      3, // signer_count_threshold
+      PRIMARY_SIGNERS,
+      1, // signer_count_threshold
       new anchor.BN(15 * 60 * 1000), // max_timestamp_delay_ms (15 minutes)
       new anchor.BN(3 * 60 * 1000) // max_timestamp_ahead_ms (3 minutes)
     )

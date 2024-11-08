@@ -21,11 +21,6 @@ async function updateSignerThreshold(newThreshold: number) {
   const { program, provider, configAccount } = await setup();
 
   try {
-    // Fetch current config to keep other values unchanged
-    const currentConfig = await program.account.configAccount.fetch(
-      configAccount
-    );
-
     // Update only the signer threshold, keeping other values the same
     const tx = await program.methods
       .updateConfig(
