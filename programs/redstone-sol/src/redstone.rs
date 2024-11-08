@@ -121,6 +121,28 @@ fn parse_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     }
 }
 
+#[cfg(feature = "dev")]
+mod debug {
+    const LOWER_DIGITS: &[u8; 16] = b"0123456789abcdef";
+    const UPPER_DIGITS: &[u8; 16] = b"0123456789ABCDEF";
+
+    pub fn hex_encode(data: &[u8]) -> String {
+        encode_to_slice(data, false)
+    }
+
+    fn encode_to_slice(data: &[u8], upper: bool) -> String {
+        let digits = if upper { UPPER_DIGITS } else { LOWER_DIGITS };
+        let mut result = String::with_capacity(data.len() * 2);
+
+        for &byte in data {
+            result.push(digits[(byte >> 4) as usize] as char);
+            result.push(digits[(byte & 0xf) as usize] as char);
+        }
+
+        result
+    }
+}
+
 pub fn recover_address(
     message: &[u8],
     signature: &[u8],
@@ -132,7 +154,12 @@ pub fn recover_address(
     let res = secp256k1_recover(&msg_hash, recovery_id, &signature[..64]);
     match res {
         Ok(pubkey) => {
-            let key_hash = keccak256(&pubkey.to_bytes()[1..]);
+            let needs_trim = pubkey.to_bytes()[0] == 4;
+            let key_hash = if needs_trim {
+                keccak256(&pubkey.to_bytes()[1..])
+            } else {
+                keccak256(&pubkey.to_bytes())
+            };
             Ok(key_hash[12..].try_into().unwrap())
         }
         Err(_e) => {
@@ -203,6 +230,7 @@ pub fn verify_signer_count(
             return Ok(());
         }
     }
+    msg!("Signer count: {} < {}", count, threshold);
     Err(RedstoneError::InsufficientSignerCount.into())
 }
 
