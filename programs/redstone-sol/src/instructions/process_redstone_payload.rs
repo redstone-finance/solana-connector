@@ -74,13 +74,20 @@ pub fn process_redstone_payload(
 
     let mut values: Vec<U256> = Vec::new();
 
+    let package_timestamp = payload.data_packages[0].timestamp;
     for package in &payload.data_packages {
+        if package_timestamp != package.timestamp {
+            return Err(RedstoneError::TimestampMismatch.into());
+        }
         for data_point in &package.data_points {
             if feed_id != data_point.feed_id {
                 return Err(RedstoneError::UnsupportedFeedId.into());
             }
             values.push(U256::from_bytes_be(&data_point.value));
         }
+    }
+    if ctx.accounts.price_account.timestamp >= package_timestamp {
+        return Err(RedstoneError::TimestampTooOld.into());
     }
 
     let median_value = median(&values);
@@ -90,7 +97,7 @@ pub fn process_redstone_payload(
         return Err(RedstoneError::MedianCalculationError.into());
     }
 
-    ctx.accounts.price_account.timestamp = config.block_timestamp;
+    ctx.accounts.price_account.timestamp = package_timestamp;
     ctx.accounts.price_account.feed_id = feed_id;
 
     msg!(

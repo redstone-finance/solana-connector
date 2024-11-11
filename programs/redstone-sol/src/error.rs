@@ -37,4 +37,7 @@ pub enum RedstoneError {
 
     #[msg("Failed to calculate median")]
     MedianCalculationError,
+
+    #[msg("Packages need to have the same timestamp")]
+    TimestampMismatch,
 }
