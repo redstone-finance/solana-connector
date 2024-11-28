@@ -10,6 +10,7 @@ pub struct PriceData {
     pub feed_id: FeedId,
     pub value: Value,
     pub timestamp: u64,
+    pub write_timestamp: u64,
 }
 
 #[account]

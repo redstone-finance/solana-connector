@@ -5,6 +5,7 @@ export interface PriceData {
   feedId: string;
   value: string;
   timestamp: string;
+  writeTimestamp: string;
 }
 
 export const makeFeedIdBytes = (feedId: string) => {
@@ -36,8 +37,8 @@ export const makePayload = async (dataPackagesIds: Array<string>) => {
 };
 
 export const deserializePriceData = (data: Buffer): PriceData => {
-  if (data.length !== 80) {
-    // 8 (discriminator) + 32 + 32 + 8 bytes
+  if (data.length !== 88) {
+    // 8 discriminator + 32 feed id + 32 value + 8 unix + 8 unix
     throw new Error("Invalid data length for PriceData " + data.length);
   }
 
@@ -46,11 +47,13 @@ export const deserializePriceData = (data: Buffer): PriceData => {
   const valueBuffer = data.subarray(40, 72);
   const value = BigInt(`0x${valueBuffer.toString("hex")}`);
   const timestamp = data.readBigUInt64LE(72);
+  const writeTimestamp = data.readBigUInt64LE(80);
 
   return {
     feedId: feedId,
     value: value.toString(),
     timestamp: timestamp.toString(),
+    writeTimestamp: writeTimestamp.toString(),
   };
 };
 

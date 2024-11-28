@@ -99,6 +99,7 @@ pub fn process_redstone_payload(
 
     ctx.accounts.price_account.timestamp = package_timestamp;
     ctx.accounts.price_account.feed_id = feed_id;
+    ctx.accounts.price_account.write_timestamp = config.block_timestamp;
 
     msg!(
         "{} {}: {}",
