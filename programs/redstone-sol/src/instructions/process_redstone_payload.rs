@@ -1,9 +1,13 @@
-use crate::error::RedstoneError;
-use crate::redstone;
-use crate::state::*;
-use crate::util::*;
+use crate::U256;
+use crate::{
+    constants::SIGNERS, error::RedstoneError, ConfigAccount, FeedId,
+    PriceData,
+};
 use anchor_lang::prelude::*;
-use zkp_u256::U256;
+use redstone::{
+    core::{config::Config, processor::process_payload},
+    network::{as_str::AsHexStr, from_bytes_repr::FromBytesRepr},
+};
 
 fn make_price_seed() -> [u8; 32] {
     let mut seed = [0u8; 32];
@@ -38,74 +42,33 @@ pub fn process_redstone_payload(
     feed_id: FeedId,
     payload: Vec<u8>,
 ) -> Result<()> {
+    let feed_id_u256 = U256::from_bytes_repr(feed_id.to_vec());
     // block_timestamp as milis
     let config = Config {
         block_timestamp: Clock::get()?.unix_timestamp as u64 * 1000,
-        config_account: &ctx.accounts.config_account,
+
+        signer_count_threshold: 3,
+        signers: SIGNERS.map(|s| s.to_vec()).into(),
+        feed_ids: vec![feed_id_u256],
     };
 
-    redstone::verify_redstone_marker(&payload)?;
+    let processed_payload = process_payload(config, payload);
 
-    let mut payload = payload;
-    let payload = redstone::parse_raw_payload(&mut payload)?;
-
-    redstone::verify_data_packages(&payload, &config)?;
-
-    #[cfg(feature = "dev")]
+    if ctx.accounts.price_account.timestamp >= processed_payload.min_timestamp
     {
-        msg!(
-            "Payload processed successfully: {}",
-            payload.data_packages.len()
-        );
-        for package in &payload.data_packages {
-            msg!(
-                "Package signer: 0x{}",
-                bytes_to_hex(&package.signer_address)
-            );
-            for data_point in &package.data_points {
-                msg!(
-                    "Data point: {} {}",
-                    u256_to_string(&data_point.feed_id),
-                    u256_to_num_string(&data_point.value),
-                );
-            }
-        }
-    }
-
-    let mut values: Vec<U256> = Vec::new();
-
-    let package_timestamp = payload.data_packages[0].timestamp;
-    for package in &payload.data_packages {
-        if package_timestamp != package.timestamp {
-            return Err(RedstoneError::TimestampMismatch.into());
-        }
-        for data_point in &package.data_points {
-            if feed_id != data_point.feed_id {
-                return Err(RedstoneError::UnsupportedFeedId.into());
-            }
-            values.push(U256::from_bytes_be(&data_point.value));
-        }
-    }
-    if ctx.accounts.price_account.timestamp >= package_timestamp {
         return Err(RedstoneError::TimestampTooOld.into());
     }
 
-    let median_value = median(&values);
-    if let Some(median_value) = &median_value {
-        ctx.accounts.price_account.value = median_value.to_bytes_be();
-    } else {
-        return Err(RedstoneError::MedianCalculationError.into());
-    }
-
-    ctx.accounts.price_account.timestamp = package_timestamp;
+    let price = processed_payload.values[0];
+    ctx.accounts.price_account.value = price.to_big_endian();
+    ctx.accounts.price_account.timestamp = processed_payload.min_timestamp;
     ctx.accounts.price_account.feed_id = feed_id;
-    ctx.accounts.price_account.write_timestamp = config.block_timestamp;
 
     msg!(
-        "{} {}: {}",
-        ctx.accounts.price_account.timestamp,
-        u256_to_string(&feed_id),
-        u256_to_num_string(&ctx.accounts.price_account.value)
+        "Updated price for feed {}: {} at timestamp {}",
+        feed_id_u256.as_hex_str(),
+        price,
+        ctx.accounts.price_account.timestamp
     );
 
     Ok(())

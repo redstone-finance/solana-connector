@@ -19,8 +19,7 @@ dev = []
 
 [dependencies]
 anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
-redstone = { git = "https://github.com/redstone-finance/rust-sdk", branch = "solana", features = ["pure", "crypto_solana"] }
-zkp-u256 = { version = "0.1.1", features = [] }
+redstone = { git = "https://github.com/redstone-finance/rust-sdk", branch = "jk-solana", features = ["pure", "crypto_solana"] }
 
 [dev-dependencies]
 rand = { version = "0.8.4", features = ["std"] }

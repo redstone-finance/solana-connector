@@ -1,15 +1,5 @@
 use crate::SignerAddress;
 
-pub const UNSIGNED_METADATA_BYTE_SIZE_BS: usize = 3;
-pub const DATA_PACKAGES_COUNT_BS: usize = 2;
-pub const DATA_POINTS_COUNT_BS: usize = 3;
-pub const SIGNATURE_BS: usize = 65;
-pub const DATA_POINT_VALUE_BYTE_SIZE_BS: usize = 4;
-pub const DATA_FEED_ID_BS: usize = 32;
-pub const TIMESTAMP_BS: usize = 6;
-pub const REDSTONE_MARKER_BS: usize = 9;
-pub const REDSTONE_MARKER: [u8; 9] = [0, 0, 2, 237, 87, 1, 30, 0, 0]; // 0x000002ed57011e0000
-
 pub const SIGNERS: [SignerAddress; 10] = [
     [
         0x10, 0x9B, 0x4A, 0x31, 0x8A, 0x4F, 0x5D, 0xDC, 0xBC, 0xA6, 0x34,

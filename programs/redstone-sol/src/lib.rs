@@ -1,7 +1,6 @@
 pub mod constants;
 pub mod error;
 pub mod instructions;
-pub mod redstone;
 pub mod state;
 pub mod util;
 
@@ -9,7 +8,11 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-declare_id!("CcnhDKVfwfZw6Vg7DHcyrBL4Ho71LkUcSLafRWpQ4f74");
+use redstone::network::{_Network, specific::NetworkSpecific};
+
+type U256 = <_Network as NetworkSpecific>::ValueRepr;
+
+declare_id!("AWwqPQM3aNi62m6dHWRGAoE6yqAnNkgAax2uQKqKPTK3");
 
 #[program]
 pub mod redstone_sol {

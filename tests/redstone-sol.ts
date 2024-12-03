@@ -9,6 +9,10 @@ import {
   makeFeedIdBytes,
   deserializePriceData,
 } from "./util";
+import {
+  ComputeBudgetProgram,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { PRIMARY_SIGNERS } from "../migrations/signers";
 
 describe("redstone-sol", () => {

@@ -21,23 +21,3 @@ pub struct ConfigAccount {
     pub max_timestamp_delay_ms: u64,
     pub max_timestamp_ahead_ms: u64,
 }
-
-pub struct DataPoint {
-    pub feed_id: FeedId,
-    pub value: Value,
-}
-
-pub struct DataPackage {
-    pub signer_address: SignerAddress,
-    pub timestamp: u64,
-    pub data_points: Vec<DataPoint>,
-}
-
-pub struct Payload {
-    pub data_packages: Vec<DataPackage>,
-}
-
-pub struct Config<'a> {
-    pub block_timestamp: u64,
-    pub config_account: &'a ConfigAccount,
-}
