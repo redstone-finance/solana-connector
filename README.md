@@ -42,7 +42,7 @@ See file `Anchor.toml` for more anchor scripts you can run.
 
 ## Tools versions
 * anchor-cli 0.30.1
-* solana-cli 2.0.17 (src:7104d713; feat:607245837, client:Agave)
+* solana-cli 2.1.4 (src:024d047e; feat:288566304, client:Agave)
 * npm 10.9.0
 * node v23.3.0
 

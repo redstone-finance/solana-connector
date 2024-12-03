@@ -8,11 +8,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-use redstone::network::{_Network, specific::NetworkSpecific};
-
-type U256 = <_Network as NetworkSpecific>::ValueRepr;
-
-declare_id!("AWwqPQM3aNi62m6dHWRGAoE6yqAnNkgAax2uQKqKPTK3");
+declare_id!("HgDoVec1cV5A6aSMoCMHgNke65aYYpcHi3Rcy4vHYeM1");
 
 #[program]
 pub mod redstone_sol {
@@ -24,9 +20,9 @@ pub mod redstone_sol {
         payload: Vec<u8>,
     ) -> Result<()> {
         msg!(
-            "Processing redstone payload of size {} for {}",
+            "Processing redstone payload of size {} for {:?}",
             payload.len(),
-            util::u256_to_string(&feed_id).to_string()
+            feed_id,
         );
         instructions::process_redstone_payload(ctx, feed_id, payload)
     }
