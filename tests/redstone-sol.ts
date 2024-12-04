@@ -82,7 +82,7 @@ describe("redstone-sol", () => {
           configAccount,
           systemProgram,
         })
-        .rpc({ skipPreflight: false });
+        .rpc({ skipPreflight: true });
 
       await printComputeUnitsUsed(provider, tx);
 
