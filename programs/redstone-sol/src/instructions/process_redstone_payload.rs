@@ -1,6 +1,13 @@
-use crate::{error::RedstoneError, ConfigAccount, FeedId, PriceData};
+use crate::{
+    error::RedstoneError, state::PriceData, util::debug_msg, ConfigAccount,
+    FeedIdBs,
+};
 use anchor_lang::prelude::*;
-use redstone::core::{config::Config, processor::process_payload};
+use redstone::{
+    core::{config::Config, processor::process_payload},
+    network::as_str::AsHexStr,
+    FeedId,
+};
 
 fn make_price_seed() -> [u8; 32] {
     let mut seed = [0u8; 32];
@@ -9,7 +16,7 @@ fn make_price_seed() -> [u8; 32] {
 }
 
 #[derive(Accounts)]
-#[instruction(feed_id: FeedId)]
+#[instruction(feed_id: FeedIdBs)]
 pub struct ProcessPayload<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
@@ -32,10 +39,10 @@ pub struct ProcessPayload<'info> {
 
 pub fn process_redstone_payload(
     ctx: Context<ProcessPayload>,
-    feed_id: FeedId,
+    feed_id: FeedIdBs,
     payload: Vec<u8>,
 ) -> Result<()> {
-    let feed_id = redstone::FeedId(feed_id);
+    let feed_id = FeedId(feed_id);
     let signers = ctx
         .accounts
         .config_account
@@ -66,12 +73,14 @@ pub fn process_redstone_payload(
     ctx.accounts.price_account.timestamp = processed_payload.min_timestamp;
     ctx.accounts.price_account.feed_id = feed_id.0;
 
-    msg!(
-        "{} {:?}: {:?}",
-        ctx.accounts.price_account.timestamp,
-        feed_id,               // as_hex_strcostly
-        price.to_big_endian(), // conversion to string costly
-    );
+    debug_msg(|| {
+        format!(
+            "{} {}: {}",
+            ctx.accounts.price_account.timestamp,
+            feed_id.as_hex_str(),
+            price,
+        )
+    });
 
     Ok(())
 }
