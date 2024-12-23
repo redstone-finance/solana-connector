@@ -3,10 +3,8 @@ use crate::{
     FeedIdBs,
 };
 use anchor_lang::prelude::*;
-use redstone::{
-    core::{config::Config, processor::process_payload},
-    network::as_str::AsHexStr,
-    FeedId,
+use redstone::{solana::SolanaRedStoneConfig,
+    core::{config::Config, processor::process_payload}, network::as_str::AsHexStr, FeedId
 };
 
 fn make_price_seed() -> [u8; 32] {
@@ -48,34 +46,34 @@ pub fn process_redstone_payload(
         .config_account
         .signers
         .iter()
-        .map(|s| s.to_vec())
+        .map(|s| s.to_vec().into())
         .collect();
     // block_timestamp as milis
-    let config = Config {
-        block_timestamp: Clock::get()?.unix_timestamp as u64 * 1000,
+    let config: SolanaRedStoneConfig = Config {
+        block_timestamp: (Clock::get()?.unix_timestamp as u64 * 1000).into(),
         signer_count_threshold: ctx
             .accounts
             .config_account
             .signer_count_threshold,
         signers,
         feed_ids: vec![feed_id],
-    };
+    }.into();
 
-    let processed_payload = process_payload(config, payload);
+    let processed_payload = process_payload(&config, payload)?;
 
-    if ctx.accounts.price_account.timestamp >= processed_payload.min_timestamp
+    if processed_payload.min_timestamp.is_before(ctx.accounts.price_account.timestamp.into())
     {
         return Err(RedstoneError::TimestampTooOld.into());
     }
 
     let price = processed_payload.values[0];
-    ctx.accounts.price_account.value = price.to_big_endian();
-    ctx.accounts.price_account.timestamp = processed_payload.min_timestamp;
+    ctx.accounts.price_account.value = price.0;
+    ctx.accounts.price_account.timestamp = processed_payload.min_timestamp.as_millis();
     ctx.accounts.price_account.feed_id = feed_id.0;
 
     debug_msg(|| {
         format!(
-            "{} {}: {}",
+            "{} {}: {:?}",
             ctx.accounts.price_account.timestamp,
             feed_id.as_hex_str(),
             price,
