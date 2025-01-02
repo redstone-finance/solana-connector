@@ -1,36 +1,38 @@
-pub mod constants;
 pub mod error;
 pub mod instructions;
-pub mod redstone;
 pub mod state;
 pub mod util;
 
 use anchor_lang::prelude::*;
 use instructions::*;
-use state::*;
+use state::ConfigAccount;
+use state::{FeedIdBs, SignerAddressBs};
 
-declare_id!("CbKWhF5f2aHFY8t7s1pwrX48jYWcFPcChWztbZm4v3oa");
+declare_id!("HgDoVec1cV5A6aSMoCMHgNke65aYYpcHi3Rcy4vHYeM1");
 
 #[program]
 pub mod redstone_sol {
     use super::*;
+    use util::debug_msg;
 
     pub fn process_redstone_payload(
         ctx: Context<ProcessPayload>,
-        feed_id: FeedId,
+        feed_id: FeedIdBs,
         payload: Vec<u8>,
     ) -> Result<()> {
-        msg!(
-            "Processing redstone payload of size {} for {}",
-            payload.len(),
-            util::u256_to_string(&feed_id).to_string()
-        );
+        debug_msg(|| {
+            format!(
+                "Processing redstone payload of size {} for {:?}",
+                payload.len(),
+                feed_id,
+            )
+        });
         instructions::process_redstone_payload(ctx, feed_id, payload)
     }
 
     pub fn initialize(
         ctx: Context<Initialize>,
-        signers: Vec<SignerAddress>,
+        signers: Vec<SignerAddressBs>,
         signer_count_threshold: u8,
         max_timestamp_delay_ms: u64,
         max_timestamp_ahead_ms: u64,
@@ -43,9 +45,10 @@ pub mod redstone_sol {
         config_account.max_timestamp_ahead_ms = max_timestamp_ahead_ms;
         Ok(())
     }
+
     pub fn update_config(
         ctx: Context<UpdateConfig>,
-        signers: Option<Vec<SignerAddress>>,
+        signers: Option<Vec<SignerAddressBs>>,
         signer_count_threshold: Option<u8>,
         max_timestamp_delay_ms: Option<u64>,
         max_timestamp_ahead_ms: Option<u64>,
